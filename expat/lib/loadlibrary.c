@@ -79,6 +79,7 @@ typedef HMODULE (APIENTRY *LOADLIBRARYEX_FN)(LPCTSTR, HANDLE, DWORD);
 HMODULE _Expat_LoadLibrary(LPCTSTR filename)
 {
   HMODULE hModule = NULL;
+#ifndef RTC_WINDOWS_UNIVERSAL
   LOADLIBRARYEX_FN pLoadLibraryEx = NULL;
 
   /* Get a handle to kernel32 so we can access it's functions at runtime */
@@ -130,7 +131,7 @@ HMODULE _Expat_LoadLibrary(LPCTSTR filename)
       free(path);
     }
   }
-
+#endif // RTC_WINDOWS_UNIVERSAL
   return hModule;
 }
 
