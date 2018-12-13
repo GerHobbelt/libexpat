@@ -53,7 +53,7 @@ project "expat"
   -- configurations
   -- -------------------------------------------------------------
 
-  if (os.is("windows") and not _TARGET_IS_WINRT and not _TARGET_IS_WINPHONE) then
+  if (os.is("windows") and not _TARGET_IS_WINUWP) then
     -- -------------------------------------------------------------
     -- configuration { "windows" }
     -- -------------------------------------------------------------
@@ -227,54 +227,6 @@ project "expat"
       }
 
     -- -------------------------------------------------------------
-    -- configuration { "ios_armv7_debug" }
-    -- -------------------------------------------------------------
-
-    -- common configuration settings
-
-    dofile (_BUILD_DIR .. "/static_ios_armv7_debug.lua")
-
-    -- project specific configuration settings
-
-    -- configuration { "ios_armv7_debug" }
-
-    -- -------------------------------------------------------------
-    -- configuration { "ios_armv7_release" }
-    -- -------------------------------------------------------------
-
-    -- common configuration settings
-
-    dofile (_BUILD_DIR .. "/static_ios_armv7_release.lua")
-
-    -- project specific configuration settings
-
-    -- configuration { "ios_armv7_release" }
-
-    -- -------------------------------------------------------------
-    -- configuration { "ios_sim_debug" }
-    -- -------------------------------------------------------------
-
-    -- common configuration settings
-
-    dofile (_BUILD_DIR .. "/static_ios_sim_debug.lua")
-
-    -- project specific configuration settings
-
-    -- configuration { "ios_sim_debug" }
-
-    -- -------------------------------------------------------------
-    -- configuration { "ios_sim_release" }
-    -- -------------------------------------------------------------
-
-    -- common configuration settings
-
-    dofile (_BUILD_DIR .. "/static_ios_sim_release.lua")
-
-    -- project specific configuration settings
-
-    -- configuration { "ios_sim_release" }
-
-    -- -------------------------------------------------------------
     -- configuration { "ios_arm64_debug" }
     -- -------------------------------------------------------------
 
@@ -391,28 +343,28 @@ project "expat"
     -- configuration { "android_x86_release" }
 
     -- -------------------------------------------------------------
-    -- configuration { "androidgles3_armv8_debug" }
+    -- configuration { "android_arm64_debug" }
     -- -------------------------------------------------------------
 
     -- common configuration settings
 
-    dofile (_BUILD_DIR .. "/static_androidgles3_armv8_debug.lua")
+    dofile (_BUILD_DIR .. "/static_android_arm64_debug.lua")
 
     -- project specific configuration settings
 
-    -- configuration { "androidgles3_armv8_debug" }
+    -- configuration { "android_arm64_debug" }
 
     -- -------------------------------------------------------------
-    -- configuration { "androidgles3_armv8_release" }
+    -- configuration { "android_arm64_release" }
     -- -------------------------------------------------------------
 
     -- common configuration settings
 
-    dofile (_BUILD_DIR .. "/static_androidgles3_armv8_release.lua")
+    dofile (_BUILD_DIR .. "/static_android_arm64_release.lua")
 
     -- project specific configuration settings
 
-    -- configuration { "androidgles3_armv8_release" }
+    -- configuration { "android_arm64_release" }
 
     -- -------------------------------------------------------------
   end
