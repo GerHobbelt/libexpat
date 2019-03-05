@@ -67,7 +67,15 @@
 # define tcsrchr strrchr
 # define tcslen strlen
 # define tperror perror
+#ifdef __linux__ 
 # define topen open
+# define tclose close
+# define tread read
+#elif _WIN32
+# define topen _open
+# define tclose _close
+# define tread _read
+#endif
 # define tmain main
 # define tremove remove
 # define tchar char

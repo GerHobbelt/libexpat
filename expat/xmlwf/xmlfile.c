@@ -204,27 +204,27 @@ processStream(const XML_Char *filename, XML_Parser parser)
     char *buf = (char *)XML_GetBuffer(parser, READ_SIZE);
     if (!buf) {
       if (filename != NULL)
-        close(fd);
+        tclose(fd);
       ftprintf(stderr, T("%s: out of memory\n"),
                filename != NULL ? filename : T("xmlwf"));
       return 0;
     }
-    nread = read(fd, buf, READ_SIZE);
+    nread = tread(fd, buf, READ_SIZE);
     if (nread < 0) {
       tperror(filename != NULL ? filename : T("STDIN"));
       if (filename != NULL)
-        close(fd);
+        tclose(fd);
       return 0;
     }
     if (XML_ParseBuffer(parser, nread, nread == 0) == XML_STATUS_ERROR) {
         reportError(parser, filename != NULL ? filename : T("STDIN"));
       if (filename != NULL)
-        close(fd);
+        tclose(fd);
       return 0;
     }
     if (nread == 0) {
       if (filename != NULL)
-        close(fd);
+        tclose(fd);
       break;;
     }
   }

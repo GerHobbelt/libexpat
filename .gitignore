@@ -28,6 +28,8 @@ core
 # CVS default ignores end
 expat/win32/bin/
 expat/win32/tmp/
+expat/win64/bin/
+expat/win64/tmp/
 expat/.vs/
 expat/**/*.vcxproj.user
 expat/**/*.suo
