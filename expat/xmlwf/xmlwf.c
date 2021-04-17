@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <math.h> /* for strtoull */
+#include <errno.h>
 
 #include "expat.h"
 #include "codepage.h"
@@ -870,7 +872,7 @@ usage(const XML_Char *prog, int rc) {
        */
       /* clang-format off */
       T("usage: %s [-s] [-n] [-p] [-x] [-e ENCODING] [-w] [-r] [-k] [-d DIRECTORY]\n")
-      T("             [-c | -m | -t] [-N]\n")
+      T("             [-c | -m | -t] [-N] [-a FACTOR] [-b BYTES]\n")
       T("             [FILE [FILE ...]]\n")
       T("\n")
       T("xmlwf - Determines if an XML document is well-formed\n")
@@ -894,6 +896,12 @@ usage(const XML_Char *prog, int rc) {
       T("  -m            write [m]eta XML, not canonical XML\n")
       T("  -t            write no XML output for [t]iming of plain parsing\n")
       T("  -N            enable adding doctype and [n]otation declarations\n")
+      T("\n")
+      T("billion laughs attack protection:\n")
+      T("  NOTE: If you ever need to increase these values for non-attack payload, please file a bug report.\n")
+      T("\n")
+      T("  -a FACTOR     set maximum tolerated [a]mplification factor (default: 100.0)\n")
+      T("  -b BYTES      set number of output [b]ytes needed to activate (default: 8 MiB)\n")
       T("\n")
       T("info arguments:\n")
       T("  -h            show this [h]elp message and exit\n")
@@ -943,6 +951,11 @@ tmain(int argc, XML_Char **argv) {
   int requireStandalone = 0;
   int requiresNotations = 0;
   int continueOnError = 0;
+
+  float attackMaximumAmplification = -1.0f; /* signaling "not set" */
+  unsigned long long attackThresholdBytes;
+  XML_Bool attackThresholdGiven = XML_FALSE;
+
   int exitCode = XMLWF_EXIT_SUCCESS;
   enum XML_ParamEntityParsing paramEntityParsing
       = XML_PARAM_ENTITY_PARSING_NEVER;
@@ -1022,6 +1035,49 @@ tmain(int argc, XML_Char **argv) {
       continueOnError = 1;
       j++;
       break;
+    case T('a'): {
+      const XML_Char *valueText = NULL;
+      XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
+
+      errno = 0;
+      XML_Char *afterValueText = (XML_Char *)valueText;
+      attackMaximumAmplification = tcstof(valueText, &afterValueText);
+      if ((errno != 0) || (afterValueText == valueText)
+          || isnan(attackMaximumAmplification)
+          || (attackMaximumAmplification < 1.0f)) {
+        // This prevents tperror(..) from reporting misleading "[..]: Success"
+        errno = ERANGE;
+        tperror(T("invalid amplification limit") T(
+            " (needs a floating point number greater or equal than 1.0)"));
+        exit(XMLWF_EXIT_USAGE_ERROR);
+      }
+#ifndef XML_DTD
+      ftprintf(stderr, T("Warning: Given amplification limit ignored") T(
+                           ", xmlwf has been compiled without DTD support.\n"));
+#endif
+      break;
+    }
+    case T('b'): {
+      const XML_Char *valueText = NULL;
+      XMLWF_SHIFT_ARG_INTO(valueText, argc, argv, i, j);
+
+      errno = 0;
+      XML_Char *afterValueText = (XML_Char *)valueText;
+      attackThresholdBytes = tcstoull(valueText, &afterValueText, 10);
+      if ((errno != 0) || (afterValueText == valueText)) {
+        // This prevents tperror(..) from reporting misleading "[..]: Success"
+        errno = ERANGE;
+        tperror(T("invalid ignore threshold")
+                    T(" (needs an integer from 0 to 2^64-1)"));
+        exit(XMLWF_EXIT_USAGE_ERROR);
+      }
+      attackThresholdGiven = XML_TRUE;
+#ifndef XML_DTD
+      ftprintf(stderr, T("Warning: Given attack threshold ignored") T(
+                           ", xmlwf has been compiled without DTD support.\n"));
+#endif
+      break;
+    }
     case T('\0'):
       if (j > 1) {
         i++;
@@ -1050,6 +1106,19 @@ tmain(int argc, XML_Char **argv) {
     if (! parser) {
       tperror(T("Could not instantiate parser"));
       exit(XMLWF_EXIT_INTERNAL_ERROR);
+    }
+
+    if (attackMaximumAmplification != -1.0f) {
+#ifdef XML_DTD
+      XML_SetBillionLaughsAttackProtectionMaximumAmplification(
+          parser, attackMaximumAmplification);
+#endif
+    }
+    if (attackThresholdGiven) {
+#ifdef XML_DTD
+      XML_SetBillionLaughsAttackProtectionActivationThreshold(
+          parser, attackThresholdBytes);
+#endif
     }
 
     if (requireStandalone)
