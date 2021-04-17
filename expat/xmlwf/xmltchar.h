@@ -54,6 +54,8 @@
 #  define tmain wmain
 #  define tremove _wremove
 #  define tchar wchar_t
+#  define tcstof wcstof
+#  define tcstoull wcstoull
 #else /* not XML_UNICODE */
 #  define T(x) x
 #  define ftprintf fprintf
@@ -71,4 +73,6 @@
 #  define tmain main
 #  define tremove remove
 #  define tchar char
+#  define tcstof strtof
+#  define tcstoull strtoull
 #endif /* not XML_UNICODE */
