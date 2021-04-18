@@ -30,6 +30,10 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifdef HAVE_EXPAT_CONFIG_H
+#  include <expat_config.h>
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
