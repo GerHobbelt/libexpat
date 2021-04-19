@@ -125,12 +125,17 @@
 #  define UNUSED_P(p) (void)p
 #endif
 
+#include "expat.h" // so we can use type XML_Parser below
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void _INTERNAL_trim_to_complete_utf8_characters(const char *from,
                                                 const char **fromLimRef);
+
+unsigned long long testingAccountingGetCountBytesDirect(XML_Parser parser);
+unsigned long long testingAccountingGetCountBytesIndirect(XML_Parser parser);
 
 #ifdef __cplusplus
 }
