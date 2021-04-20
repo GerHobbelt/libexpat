@@ -11220,7 +11220,7 @@ START_TEST(test_nsalloc_prefixed_element) {
 }
 END_TEST
 
-#if defined(XML_DTD)
+#if defined(XML_DTD) /* TODO DROP: */ && ! defined(XML_UNICODE)
 typedef enum XML_Status (*XmlParseFunction)(XML_Parser, const char *, int, int);
 
 struct AccountingTestCase {
@@ -11511,7 +11511,7 @@ make_suite(void) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
   TCase *tc_alloc = tcase_create("allocation tests");
   TCase *tc_nsalloc = tcase_create("namespace allocation tests");
-#if defined(XML_DTD)
+#if defined(XML_DTD) /* TODO DROP: */ && ! defined(XML_UNICODE)
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
@@ -11878,7 +11878,7 @@ make_suite(void) {
   tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
   tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
 
-#if defined(XML_DTD)
+#if defined(XML_DTD) /* TODO DROP: */ && ! defined(XML_UNICODE)
   suite_add_tcase(s, tc_accounting);
   tcase_add_test(tc_accounting, test_accounting_precision);
 #endif
