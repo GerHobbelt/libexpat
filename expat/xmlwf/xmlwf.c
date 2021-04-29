@@ -871,9 +871,10 @@ usage(const XML_Char *prog, int rc) {
        * xmlwf/xmlwf_helpgen.sh in here.
        */
       /* clang-format off */
-      T("usage: %s [-s] [-n] [-p] [-x] [-e ENCODING] [-w] [-r] [-k] [-d DIRECTORY]\n")
-      T("             [-c | -m | -t] [-N] [-a FACTOR] [-b BYTES]\n")
-      T("             [FILE [FILE ...]]\n")
+      T("usage:\n")
+      T("  %s [OPTIONS] [FILE ...]\n")
+      T("  %s -h\n")
+      T("  %s -v\n")
       T("\n")
       T("xmlwf - Determines if an XML document is well-formed\n")
       T("\n")
@@ -917,7 +918,7 @@ usage(const XML_Char *prog, int rc) {
       T("xmlwf of libexpat is software libre, licensed under the MIT license.\n")
       T("Please report bugs at https://github.com/libexpat/libexpat/issues.  Thank you!\n")
       , /* clang-format on */
-      prog);
+      prog, prog, prog);
   exit(rc);
 }
 
