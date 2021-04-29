@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <math.h> /* for strtoull */
+#include <math.h> /* for strtof, strtoull */
 #include <errno.h>
 
 #include "expat.h"
@@ -1043,7 +1043,7 @@ tmain(int argc, XML_Char **argv) {
       errno = 0;
       XML_Char *afterValueText = (XML_Char *)valueText;
       attackMaximumAmplification = tcstof(valueText, &afterValueText);
-      if ((errno != 0) || (afterValueText == valueText)
+      if ((errno != 0) || (afterValueText[0] != T('\0'))
           || isnan(attackMaximumAmplification)
           || (attackMaximumAmplification < 1.0f)) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
@@ -1065,7 +1065,7 @@ tmain(int argc, XML_Char **argv) {
       errno = 0;
       XML_Char *afterValueText = (XML_Char *)valueText;
       attackThresholdBytes = tcstoull(valueText, &afterValueText, 10);
-      if ((errno != 0) || (afterValueText == valueText)) {
+      if ((errno != 0) || (afterValueText[0] != T('\0'))) {
         // This prevents tperror(..) from reporting misleading "[..]: Success"
         errno = ERANGE;
         tperror(T("invalid ignore threshold")

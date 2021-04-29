@@ -7407,7 +7407,7 @@ getRootParserOf(XML_Parser parser, unsigned int *outLevelDiff) {
   return rootParser;
 }
 
-static const char *
+const char *
 unsignedCharToPrintable(unsigned char c) {
   switch (c) {
   case 0:
@@ -7942,7 +7942,7 @@ getDebugLevel(const char *variableName, unsigned long defaultDebugLevel) {
   errno = 0;
   char *afterValue = (char *)value;
   unsigned long debugLevel = strtoul(value, &afterValue, 10);
-  if ((errno != 0) || (afterValue == value)) {
+  if ((errno != 0) || (afterValue[0] != '\0')) {
     errno = 0;
     return defaultDebugLevel;
   }

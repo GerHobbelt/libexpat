@@ -8,7 +8,7 @@ Release X.X.X XXX XXXXX XX XXXX
                     (denial-of-service; flavors targetting CPU time or RAM or both,
                     leveraging general entities or parameter entities or both)
                     by tracking and limiting the input amplification factor
-                    (<amplification> = (<direct> + <indirect>) / <direct>).
+                    (<amplification> := (<direct> + <indirect>) / <direct>).
                     By default, amplification up to a factor of 100.0 is tolerated
                     and rejection only starts after 8 MiB of output bytes
                     (=<direct> + <indirect>) have been processed.
@@ -39,6 +39,7 @@ Release X.X.X XXX XXXXX XX XXXX
 
         Special thanks to:
             Nick Wellnhofer
+            Yury Gribov
                  and
             Clang LeakSan
             JetBrains
