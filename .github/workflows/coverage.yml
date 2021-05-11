@@ -27,7 +27,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Ensure that GNU Autotools and CMake build systems agree
+name: Collect test coverage
 
 on:
   pull_request:
@@ -37,65 +37,43 @@ on:
 
 jobs:
   checks:
-    name: Ensure that GNU Autotools and CMake build systems agree
-    runs-on: ubuntu-20.04
+    name: Collect test coverage
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -g3 -pipe
     steps:
     - uses: actions/checkout@v2.3.4
-
-    - name: Install build dependencies
+    - name: Add Clang/LLVM repositories
       run: |-
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main'
+    - name: Install build dependencies
+      # NOTE: Please note the version-specific ${PATH} extension for Clang in .travis.sh
+      run: |-
+        sudo dpkg --add-architecture i386  # for wine32
+        # See https://github.com/actions/virtual-environments/issues/3339#issuecomment-834355074
+        sudo apt-add-repository --yes "ppa:ondrej/php"  # for wine32, not kidding
+        sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
+            clang-11 \
+            clang-format-11 \
+            llvm-11 \
             cmake \
             docbook2x \
-            lzip
-
-    - name: Produce and extract a release archive
+            dos2unix \
+            lcov \
+            libbsd-dev \
+            lzip \
+            mingw-w64 \
+            moreutils \
+            wine-stable \
+            wine32
+    - name: Unshallow Git clone
       run: |
-        set -x
-        cd expat
-        ./buildconf.sh
-        ./configure
-        make dist
-        tar xf expat-*.*.*.tar.gz
-
-    - name: Build and install using GNU Autotools
+        git fetch --tags --unshallow origin  # for "git describe" in coverage.sh
+    - name: Collect test coverage
+      env:
+        MODE: coverage-sh
+        TRAVIS_OS_NAME: linux
       run: |
-        set -x
-        cd expat/expat-*.*.*/
-        mkdir build_autotools
-        cd build_autotools
-        ../configure --libdir='${exec_prefix}/lib123'
-        make install DESTDIR="${PWD}"/ROOT
-
-    - name: Build and install using CMake
-      run: |
-        set -x
-        cd expat/expat-*.*.*/
-        mkdir build_cmake
-        cd build_cmake
-        cmake -DCMAKE_INSTALL_LIBDIR=lib123 ..
-        make install DESTDIR="${PWD}"/ROOT
-
-    - name: Check for identical CMake files from both build systems
-      run: |
-        set -x
-        cd expat/expat-*.*.*/
-        diff \
-            --recursive \
-            --unified \
-            --exclude=xmlwf \
-            --exclude=libexpat.a \
-            --exclude=libexpat.la \
-            --exclude='*.so*' \
-            --exclude=expat_config.h \
-            build_{autotools,cmake}/ROOT
-
-    - name: Check for identical exported symbols from both build systems
-      run: |
-        list_shared_library_symbols_sh="${GITHUB_WORKSPACE}"/.github/workflows/scripts/list-shared-library-symbols.sh
-        exported_symbols_txt="${GITHUB_WORKSPACE}"/.github/workflows/data/exported-symbols.txt
-
-        set -x
-        cd expat/expat-*.*.*/
-        diff -u "${exported_symbols_txt}" <("${list_shared_library_symbols_sh}" build_autotools/ROOT/usr/local/lib*/libexpat.so)
-        diff -u "${exported_symbols_txt}" <("${list_shared_library_symbols_sh}" build_cmake/ROOT/usr/local/lib*/libexpat.so)
+        exec ./.travis.sh

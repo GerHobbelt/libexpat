@@ -6,8 +6,17 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 1997-2000 Thai Open Source Software Center Ltd
-   Copyright (c) 2000-2017 Expat development team
+   Copyright (c) 2001-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+   Copyright (c) 2003      Greg Stein <gstein@users.sourceforge.net>
+   Copyright (c) 2005-2007 Steven Solie <ssolie@users.sourceforge.net>
+   Copyright (c) 2005-2012 Karl Waclawek <karl@waclawek.net>
+   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017-2018 Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2017      Joe Orton <jorton@redhat.com>
+   Copyright (c) 2017      José Gutiérrez de la Concha <jose@zeroc.com>
+   Copyright (c) 2018      Marco Maggi <marco.maggi-ipsu@poste.it>
+   Copyright (c) 2019      David Loffredo <loffredo@steptools.com>
+   Copyright (c) 2020      Tim Gates <tim.gates@iress.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -2246,7 +2255,6 @@ START_TEST(test_long_cdata_utf16) {
 END_TEST
 
 /* Test handling of multiple unit UTF-16 characters */
-#ifndef XML_MIN_SIZE /* FIXME workaround -DXML_MIN_SIZE + ASan (issue #332) */
 START_TEST(test_multichar_cdata_utf16) {
   /* Test data is:
    *   <?xml version='1.0' encoding='utf-16'?>
@@ -2268,11 +2276,11 @@ START_TEST(test_multichar_cdata_utf16) {
                       "\0<\0a\0>\0<\0!\0[\0C\0D\0A\0T\0A\0["
                       "\xd8\x34\xdd\x5e\xd8\x34\xdd\x5f"
                       "\0]\0]\0>\0<\0/\0a\0>";
-#  ifdef XML_UNICODE
+#ifdef XML_UNICODE
   const XML_Char *expected = XCS("\xd834\xdd5e\xd834\xdd5f");
-#  else
+#else
   const XML_Char *expected = XCS("\xf0\x9d\x85\x9e\xf0\x9d\x85\x9f");
-#  endif
+#endif
   CharData storage;
 
   CharData_Init(&storage);
@@ -2285,7 +2293,6 @@ START_TEST(test_multichar_cdata_utf16) {
   CharData_CheckXMLChars(&storage, expected);
 }
 END_TEST
-#endif /* ifndef XML_MIN_SIZE */
 
 /* Test that an element name with a UTF-16 surrogate pair is rejected */
 START_TEST(test_utf16_bad_surrogate_pair) {
@@ -2370,7 +2377,6 @@ START_TEST(test_bad_cdata) {
 END_TEST
 
 /* Test failures in UTF-16 CDATA */
-#ifndef XML_MIN_SIZE /* FIXME workaround -DXML_MIN_SIZE + ASan (issue #332) */
 START_TEST(test_bad_cdata_utf16) {
   struct CaseData {
     size_t text_bytes;
@@ -2443,7 +2449,6 @@ START_TEST(test_bad_cdata_utf16) {
   }
 }
 END_TEST
-#endif /* ifndef XML_MIN_SIZE */
 
 static const char *long_cdata_text
     = "<s><![CDATA["
@@ -11678,14 +11683,10 @@ make_suite(void) {
   tcase_add_test(tc_basic, test_good_cdata_utf16);
   tcase_add_test(tc_basic, test_good_cdata_utf16_le);
   tcase_add_test(tc_basic, test_long_cdata_utf16);
-#ifndef XML_MIN_SIZE /* FIXME workaround -DXML_MIN_SIZE + ASan (issue #332) */
   tcase_add_test(tc_basic, test_multichar_cdata_utf16);
-#endif
   tcase_add_test(tc_basic, test_utf16_bad_surrogate_pair);
   tcase_add_test(tc_basic, test_bad_cdata);
-#ifndef XML_MIN_SIZE /* FIXME workaround -DXML_MIN_SIZE + ASan (issue #332) */
   tcase_add_test(tc_basic, test_bad_cdata_utf16);
-#endif
   tcase_add_test(tc_basic, test_stop_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_suspend_parser_between_cdata_calls);
   tcase_add_test(tc_basic, test_memory_allocation);
