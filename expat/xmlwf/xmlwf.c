@@ -46,7 +46,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <math.h> /* for strtof, strtoull */
+#include <math.h> /* for strtof, strtoull, isnan */
 #include <errno.h>
 
 #include "expat.h"

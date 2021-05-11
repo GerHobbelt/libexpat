@@ -53,7 +53,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdint.h> /* intptr_t uint64_t */
-#include <math.h>   /* isnan */
+#include <math.h>   /* NAN, INFINITY, isnan */
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>
@@ -11226,7 +11226,7 @@ START_TEST(test_nsalloc_prefixed_element) {
 }
 END_TEST
 
-#if defined(XML_DTD) /* TODO DROP: */ && ! defined(XML_UNICODE)
+#if defined(XML_DTD)
 typedef enum XML_Status (*XmlParseFunction)(XML_Parser, const char *, int, int);
 
 struct AccountingTestCase {
@@ -11285,7 +11285,7 @@ START_TEST(test_accounting_precision) {
       {"<p:e xmlns:p=\"https://domain.invalid/\" />", NULL, NULL, 0,
        filled_later},
       {"<e k=\"&amp;&apos;&gt;&lt;&quot;\" />", NULL, NULL,
-       5 /* number of predefined entites */, filled_later},
+       sizeof(XML_Char) * 5 /* number of predefined entites */, filled_later},
       {"<e1 xmlns='https://example.org/'>\n"
        "  <e2 xmlns=''/>\n"
        "</e1>",
@@ -11295,7 +11295,7 @@ START_TEST(test_accounting_precision) {
       {"<e>text</e>", NULL, NULL, 0, filled_later},
       {"<e1><e2>text1<e3/>text2</e2></e1>", NULL, NULL, 0, filled_later},
       {"<e>&amp;&apos;&gt;&lt;&quot;</e>", NULL, NULL,
-       5 /* number of predefined entites */, filled_later},
+       sizeof(XML_Char) * 5 /* number of predefined entites */, filled_later},
       {"<e>&#65;&#41;</e>", NULL, NULL, 0, filled_later},
 
       /* Prolog */
@@ -11329,26 +11329,27 @@ START_TEST(test_accounting_precision) {
        "<r/>\n",
        "<![%draft;[<!--1-->]]>\n"
        "<![%final;[<!--22-->]]>",
-       NULL, strlen("INCLUDE") + strlen("IGNORE"), filled_later},
+       NULL, sizeof(XML_Char) * (strlen("INCLUDE") + strlen("IGNORE")),
+       filled_later},
 
       /* General entities */
       {"<!DOCTYPE root [\n"
        "<!ENTITY nine \"123456789\">\n"
        "]>\n"
        "<root>&nine;</root>",
-       NULL, NULL, strlen("123456789"), filled_later},
+       NULL, NULL, sizeof(XML_Char) * strlen("123456789"), filled_later},
       {"<!DOCTYPE root [\n"
        "<!ENTITY nine \"123456789\">\n"
        "]>\n"
        "<root k1=\"&nine;\"/>",
-       NULL, NULL, strlen("123456789"), filled_later},
+       NULL, NULL, sizeof(XML_Char) * strlen("123456789"), filled_later},
       {"<!DOCTYPE root [\n"
        "<!ENTITY nine \"123456789\">\n"
        "<!ENTITY nine2 \"&nine;&nine;\">\n"
        "]>\n"
        "<root>&nine2;&nine2;&nine2;</root>",
        NULL, NULL,
-       3 /* calls to &nine2; */ * 2 /* calls to &nine; */
+       sizeof(XML_Char) * 3 /* calls to &nine2; */ * 2 /* calls to &nine; */
            * (strlen("&nine;") + strlen("123456789")),
        filled_later},
       {"<!DOCTYPE r [\n"
@@ -11363,13 +11364,15 @@ START_TEST(test_accounting_precision) {
        "%comment;\n"
        "]>\n"
        "<r/>",
-       NULL, NULL, strlen("<!---->"), filled_later},
+       NULL, NULL, sizeof(XML_Char) * strlen("<!---->"), filled_later},
       {"<!DOCTYPE r [\n"
        "<!ENTITY % ninedef \"&#60;!ENTITY nine &#34;123456789&#34;&#62;\">\n"
        "%ninedef;\n"
        "]>\n"
        "<r>&nine;</r>",
-       NULL, NULL, strlen("<!ENTITY nine \"123456789\">") + strlen("123456789"),
+       NULL, NULL,
+       sizeof(XML_Char)
+           * (strlen("<!ENTITY nine \"123456789\">") + strlen("123456789")),
        filled_later},
       {"<!DOCTYPE r [\n"
        "<!ENTITY % comment \"<!--1-->\">\n"
@@ -11378,7 +11381,8 @@ START_TEST(test_accounting_precision) {
        "]>\n"
        "<r/>\n",
        NULL, NULL,
-       strlen("%comment;<!--22-->%comment;") + 2 * strlen("<!--1-->"),
+       sizeof(XML_Char)
+           * (strlen("%comment;<!--22-->%comment;") + 2 * strlen("<!--1-->")),
        filled_later},
       {"<!DOCTYPE r [\n"
        "  <!ENTITY % five \"12345\">\n"
@@ -11387,9 +11391,10 @@ START_TEST(test_accounting_precision) {
        "]>\n"
        "<r>&five2;</r>",
        NULL, NULL, /* from "%five2def;": */
-       strlen("<!ENTITY five2 \"[%five;][%five;]]]]\">")
-           + 2 /* calls to "%five;" */ * strlen("12345")
-           + /* from "&five2;": */ strlen("[12345][12345]]]]"),
+       sizeof(XML_Char)
+           * (strlen("<!ENTITY five2 \"[%five;][%five;]]]]\">")
+              + 2 /* calls to "%five;" */ * strlen("12345")
+              + /* from "&five2;": */ strlen("[12345][12345]]]]")),
        filled_later},
       {"<!DOCTYPE r SYSTEM \"first.ent\">\n"
        "<r/>",
@@ -11397,15 +11402,17 @@ START_TEST(test_accounting_precision) {
        "<!ENTITY % comment2 '<!--22-->%comment;<!--22-->%comment;<!--22-->'>\n"
        "%comment2;",
        NULL,
-       strlen("<!--22-->%comment;<!--22-->%comment;<!--22-->")
-           + 2 /* calls to "%comment;" */ * strlen("<!---->"),
+       sizeof(XML_Char)
+           * (strlen("<!--22-->%comment;<!--22-->%comment;<!--22-->")
+              + 2 /* calls to "%comment;" */ * strlen("<!---->")),
        filled_later},
       {"<!DOCTYPE r SYSTEM 'first.ent'>\n"
        "<r/>",
        "<!ENTITY % e1 PUBLIC 'foo' 'second.ent'>\n"
        "<!ENTITY % e2 '<!--22-->%e1;<!--22-->'>\n"
        "%e2;\n",
-       "<!--1-->", strlen("<!--22--><!--1--><!--22-->"), filled_later},
+       "<!--1-->", sizeof(XML_Char) * strlen("<!--22--><!--1--><!--22-->"),
+       filled_later},
       {
           "<!DOCTYPE r SYSTEM 'first.ent'>\n"
           "<r/>",
@@ -11533,7 +11540,7 @@ START_TEST(test_billion_laughs_attack_protection_api) {
       == XML_TRUE)
     fail("Call with non-root parser is NOT supposed to succeed");
   if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
-          parserWithoutParent, nan)
+          parserWithoutParent, NAN)
       == XML_TRUE)
     fail("Call with NaN limit is NOT supposed to succeed");
   if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
@@ -11555,7 +11562,7 @@ START_TEST(test_billion_laughs_attack_protection_api) {
       == XML_FALSE)
     fail("Call with positive limit >=1.0 is supposed to succeed");
   if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
-          parserWithoutParent, inf)
+          parserWithoutParent, INFINITY)
       == XML_FALSE)
     fail("Call with positive limit >=1.0 is supposed to succeed");
 
@@ -11607,7 +11614,7 @@ make_suite(void) {
   TCase *tc_misc = tcase_create("miscellaneous tests");
   TCase *tc_alloc = tcase_create("allocation tests");
   TCase *tc_nsalloc = tcase_create("namespace allocation tests");
-#if defined(XML_DTD) /* TODO DROP: */ && ! defined(XML_UNICODE)
+#if defined(XML_DTD)
   TCase *tc_accounting = tcase_create("accounting tests");
 #endif
 
@@ -11970,7 +11977,7 @@ make_suite(void) {
   tcase_add_test(tc_nsalloc, test_nsalloc_long_systemid_in_ext);
   tcase_add_test(tc_nsalloc, test_nsalloc_prefixed_element);
 
-#if defined(XML_DTD) /* TODO DROP: */ && ! defined(XML_UNICODE)
+#if defined(XML_DTD)
   suite_add_tcase(s, tc_accounting);
   tcase_add_test(tc_accounting, test_accounting_precision);
   tcase_add_test(tc_accounting, test_billion_laughs_attack_protection_api);

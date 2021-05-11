@@ -887,7 +887,7 @@ gather_time_entropy(void) {
 
 static unsigned long
 ENTROPY_DEBUG(const char *label, unsigned long entropy) {
-  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) == 1u) {
+  if (getDebugLevel("EXPAT_ENTROPY_DEBUG", 0) >= 1u) {
     fprintf(stderr, "expat: Entropy: %s --> 0x%0*lx (%lu bytes)\n", label,
             (int)sizeof(entropy) * 2, entropy, (unsigned long)sizeof(entropy));
   }
@@ -1158,9 +1158,10 @@ parserInit(XML_Parser parser, const XML_Char *encodingName) {
   /* NOTE BEGIN If you ever patch these defaults to greater values
    *            for non-attack XML payload in your environment,
    *            please file a bug report with libexpat.  Thank you! */
-  parser->m_accounting.maximumAmplificationFactor = 100.0;
-  parser->m_accounting.activationThresholdBytes = 8388608; // 8 MiB, 2^23
-  /* NOTE END */
+  parser->m_accounting.maximumAmplificationFactor
+      = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT;
+  parser->m_accounting.activationThresholdBytes
+      = EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT;
 
   memset(&parser->m_entity_stats, 0, sizeof(ENTITY_STATS));
   parser->m_entity_stats.debugLevel = getDebugLevel("EXPAT_ENTITY_DEBUG", 0u);
@@ -2479,37 +2480,47 @@ XML_ExpatVersionInfo(void) {
 
 const XML_Feature *XMLCALL
 XML_GetFeatureList(void) {
-  static const XML_Feature features[]
-      = {{XML_FEATURE_SIZEOF_XML_CHAR, XML_L("sizeof(XML_Char)"),
-          sizeof(XML_Char)},
-         {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)"),
-          sizeof(XML_LChar)},
+  static const XML_Feature features[] = {
+      {XML_FEATURE_SIZEOF_XML_CHAR, XML_L("sizeof(XML_Char)"),
+       sizeof(XML_Char)},
+      {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)"),
+       sizeof(XML_LChar)},
 #ifdef XML_UNICODE
-         {XML_FEATURE_UNICODE, XML_L("XML_UNICODE"), 0},
+      {XML_FEATURE_UNICODE, XML_L("XML_UNICODE"), 0},
 #endif
 #ifdef XML_UNICODE_WCHAR_T
-         {XML_FEATURE_UNICODE_WCHAR_T, XML_L("XML_UNICODE_WCHAR_T"), 0},
+      {XML_FEATURE_UNICODE_WCHAR_T, XML_L("XML_UNICODE_WCHAR_T"), 0},
 #endif
 #ifdef XML_DTD
-         {XML_FEATURE_DTD, XML_L("XML_DTD"), 0},
+      {XML_FEATURE_DTD, XML_L("XML_DTD"), 0},
 #endif
 #ifdef XML_CONTEXT_BYTES
-         {XML_FEATURE_CONTEXT_BYTES, XML_L("XML_CONTEXT_BYTES"),
-          XML_CONTEXT_BYTES},
+      {XML_FEATURE_CONTEXT_BYTES, XML_L("XML_CONTEXT_BYTES"),
+       XML_CONTEXT_BYTES},
 #endif
 #ifdef XML_MIN_SIZE
-         {XML_FEATURE_MIN_SIZE, XML_L("XML_MIN_SIZE"), 0},
+      {XML_FEATURE_MIN_SIZE, XML_L("XML_MIN_SIZE"), 0},
 #endif
 #ifdef XML_NS
-         {XML_FEATURE_NS, XML_L("XML_NS"), 0},
+      {XML_FEATURE_NS, XML_L("XML_NS"), 0},
 #endif
 #ifdef XML_LARGE_SIZE
-         {XML_FEATURE_LARGE_SIZE, XML_L("XML_LARGE_SIZE"), 0},
+      {XML_FEATURE_LARGE_SIZE, XML_L("XML_LARGE_SIZE"), 0},
 #endif
 #ifdef XML_ATTR_INFO
-         {XML_FEATURE_ATTR_INFO, XML_L("XML_ATTR_INFO"), 0},
+      {XML_FEATURE_ATTR_INFO, XML_L("XML_ATTR_INFO"), 0},
 #endif
-         {XML_FEATURE_END, NULL, 0}};
+#ifdef XML_DTD
+      /* Added in Expat 2.4.0. */
+      {XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT,
+       XML_L("XML_BLAP_MAX_AMP"),
+       (long int)
+           EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_MAXIMUM_AMPLIFICATION_DEFAULT},
+      {XML_FEATURE_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT,
+       XML_L("XML_BLAP_ACT_THRES"),
+       EXPAT_BILLION_LAUGHS_ATTACK_PROTECTION_ACTIVATION_THRESHOLD_DEFAULT},
+#endif
+      {XML_FEATURE_END, NULL, 0}};
 
   return features;
 }
@@ -2806,10 +2817,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
 #ifdef XML_DTD
         /* NOTE: We are replacing 4-6 characters original input for 1 character
          *       so there is no amplification and hence recording without
-         * protection. */
-        const char asciiChar = (char)ch;
-        accountingDiffTolerated(parser, tok, &asciiChar, &asciiChar + 1,
-                                __LINE__, XML_ACCOUNT_ENTITY_EXPANSION);
+         *       protection. */
+        accountingDiffTolerated(parser, tok, (char *)&ch,
+                                ((char *)&ch) + sizeof(XML_Char), __LINE__,
+                                XML_ACCOUNT_ENTITY_EXPANSION);
 #endif /* XML_DTD */
         if (parser->m_characterDataHandler)
           parser->m_characterDataHandler(parser->m_handlerArg, &ch, 1);
@@ -5644,10 +5655,10 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
 #ifdef XML_DTD
         /* NOTE: We are replacing 4-6 characters original input for 1 character
          *       so there is no amplification and hence recording without
-         * protection. */
-        const char asciiChar = (char)ch;
-        accountingDiffTolerated(parser, tok, &asciiChar, &asciiChar + 1,
-                                __LINE__, XML_ACCOUNT_ENTITY_EXPANSION);
+         *       protection. */
+        accountingDiffTolerated(parser, tok, (char *)&ch,
+                                ((char *)&ch) + sizeof(XML_Char), __LINE__,
+                                XML_ACCOUNT_ENTITY_EXPANSION);
 #endif /* XML_DTD */
         if (! poolAppendChar(pool, ch))
           return XML_ERROR_NO_MEMORY;
@@ -7244,13 +7255,12 @@ accountingReportStats(XML_Parser originParser, const char *epilog) {
 
   const float amplificationFactor
       = accountingGetCurrentAmplification(rootParser);
-  fprintf(
-      stderr,
-      "expat: Accounting(%p): Direct bytes " EXPAT_FMT_ULL(
-          "10") ", indirect bytes " EXPAT_FMT_ULL("10") ", ratio %8.2f/%8.2f%s",
-      (void *)rootParser, rootParser->m_accounting.countBytesDirect,
-      rootParser->m_accounting.countBytesIndirect, (double)amplificationFactor,
-      (double)rootParser->m_accounting.peakAmplificationFactor, epilog);
+  fprintf(stderr,
+          "expat: Accounting(%p): Direct " EXPAT_FMT_ULL(
+              "10") ", indirect " EXPAT_FMT_ULL("10") ", amplification %8.2f%s",
+          (void *)rootParser, rootParser->m_accounting.countBytesDirect,
+          rootParser->m_accounting.countBytesIndirect,
+          (double)amplificationFactor, epilog);
 }
 
 static void
@@ -7266,7 +7276,7 @@ accountingReportDiff(XML_Parser rootParser,
   assert(! rootParser->m_parentParser);
 
   fprintf(stderr,
-          " (+" EXPAT_FMT_PTRDIFF_T("5") " bytes %s|%d, xmlparse.c:%d) %*s\"",
+          " (+" EXPAT_FMT_PTRDIFF_T("6") " bytes %s|%d, xmlparse.c:%d) %*s\"",
           bytesMore, (account == XML_ACCOUNT_DIRECT) ? "DIR" : "EXP",
           levelsAwayFromRootParser, source_line, 10, "");
 
