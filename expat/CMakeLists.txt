@@ -448,14 +448,12 @@ if(EXPAT_BUILD_TESTS)
         endif()
     endfunction()
 
-    add_executable(runtests tests/runtests.c ${test_SRCS})
+    add_executable(runtests tests/runtests.c ${test_SRCS} ${expat_SRCS})
     set_property(TARGET runtests PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    target_link_libraries(runtests expat)
     expat_add_test(runtests $<TARGET_FILE:runtests>)
 
-    add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS})
+    add_executable(runtestspp tests/runtestspp.cpp ${test_SRCS} ${expat_SRCS})
     set_property(TARGET runtestspp PROPERTY RUNTIME_OUTPUT_DIRECTORY tests)
-    target_link_libraries(runtestspp expat)
     expat_add_test(runtestspp $<TARGET_FILE:runtestspp>)
 endif()
 

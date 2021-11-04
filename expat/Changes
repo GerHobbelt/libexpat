@@ -2,6 +2,43 @@ NOTE: We are looking for help with a few things:
       https://github.com/libexpat/libexpat/labels/help%20wanted
       If you can help, please get in touch.  Thanks!
 
+
+Release 2.2.11 XXX XXXXX XX XXXX
+        Security fixes:
+        #34 #466  CVE-2013-0340/CWE-776 -- Protect against billion laughs attacks
+                    (denial-of-service; flavors targeting CPU time or RAM or both,
+                    leveraging general entities or parameter entities or both)
+                    by tracking and limiting the input amplification factor
+                    (<amplification> := (<direct> + <indirect>) / <direct>).
+                    By conservative default, amplification up to a factor of 100.0
+                    is tolerated and rejection only starts after 8 MiB of output bytes
+                    (=<direct> + <indirect>) have been processed.
+                    A new error code XML_ERROR_AMPLIFICATION_LIMIT_BREACH signals
+                    this condition.
+        New features:
+        #34 #466  Add two new API functions to further tighten billion laughs
+                    protection parameters when desired.
+                    - XML_SetBillionLaughsAttackProtectionMaximumAmplification
+                    - XML_SetBillionLaughsAttackProtectionActivationThreshold
+                    Please see file "doc/reference.html" for more details.
+                    If you ever need to increase the defaults for non-attack XML
+                    payload, please file a bug report with libexpat.
+        #34 #466  Introduce environment switches EXPAT_ACCOUNTING_DEBUG=(0|1|2|3)
+                    and EXPAT_ENTITY_DEBUG=(0|1) for runtime debugging of accounting
+                    and entity processing; specific behavior of these values may
+                    change in the future.
+        #34 #466  xmlwf: Add arguments "-a FACTOR" and "-b BYTES" to further tighten
+                    billion laughs protection parameters when desired.
+                    If you ever need to increase the defaults for non-attack XML
+                    payload, please file a bug report with libexpat.
+
+        Special thanks to:
+            Nick Wellnhofer
+            Yury Gribov
+                 and
+            Clang LeakSan
+            JetBrains
+
 Release 2.2.10 Sat October 3 2020
         Bug fixes:
   #390 #395 #398  Fix undefined behavior during parsing caused by
