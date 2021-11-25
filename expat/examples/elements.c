@@ -75,8 +75,14 @@ endElement(void *userData, const XML_Char *name) {
   *depthPtr -= 1;
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_elements_example_main
+#endif
+
 int
-main(int argc, char *argv[]) {
+main(int argc, const char** argv)
+{
   char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
   int done;

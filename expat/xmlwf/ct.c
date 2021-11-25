@@ -31,6 +31,9 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define CHARSET_MAX 41
 
 static const char *
@@ -111,9 +114,10 @@ matchkey(const char *start, const char *end, const char *key) {
   return *key == '\0';
 }
 
-void
+static void
 getXMLCharset(const char *buf, char *charset) {
   const char *next, *p;
+  int isXml = 0;
 
   charset[0] = '\0';
   next = buf;
@@ -165,8 +169,14 @@ getXMLCharset(const char *buf, char *charset) {
   }
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_ct_main
+#endif
+
 int
-main(int argc, char **argv) {
+main(int argc, const char** argv)
+{
   char buf[CHARSET_MAX];
   getXMLCharset(argv[1], buf);
   printf("charset = \"%s\"\n", buf);

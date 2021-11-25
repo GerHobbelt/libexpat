@@ -33,4 +33,7 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+
+#define expat_runtests_main 	expat_runtestspp_main
+
 #include "runtests.c"

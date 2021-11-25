@@ -175,12 +175,18 @@ getXMLCharset(const char *buf, char *charset) {
   }
 }
 
-#ifdef TEST
+#if defined(TEST) || defined(BUILD_MONOLITHIC)
 
-#  include <stdio.h>
+#include <stdio.h>
+
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_xmlmime_test_main
+#endif
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char** argv)
+{
   char buf[CHARSET_MAX];
   if (argc <= 1)
     return 1;

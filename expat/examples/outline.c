@@ -83,8 +83,14 @@ end(void *data, const XML_Char *el) {
   Depth--;
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_outline_example_main
+#endif
+
 int
-main(int argc, char *argv[]) {
+main(int argc, const char** argv)
+{
   XML_Parser p = XML_ParserCreate(NULL);
   (void)argc;
   (void)argv;

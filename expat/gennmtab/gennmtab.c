@@ -441,8 +441,14 @@ printTabs(char *tab) {
   printf("};\n");
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_gennmtab_main
+#endif
+
 int
-main() {
+main(int argc, const char** argv)
+{
   char tab[2 * 65536];
   memset(tab, 0, 65536);
   setTab(tab, nmstrt, sizeof(nmstrt) / sizeof(nmstrt[0]));

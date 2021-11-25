@@ -841,8 +841,8 @@ notStandalone(void *userData) {
 }
 
 static void
-showVersion(XML_Char *prog) {
-  XML_Char *s = prog;
+showVersion(const XML_Char *prog) {
+	const XML_Char *s = prog;
   XML_Char ch;
   const XML_Feature *features = XML_GetFeatureList();
   while ((ch = *s) != 0) {
@@ -949,8 +949,13 @@ int wmain(int argc, XML_Char **argv);
     j = 0;                                                                     \
   }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_xmlwf_test_main
+#endif
+
 int
-tmain(int argc, XML_Char **argv) {
+tmain(int argc, const XML_Char **argv) {
   int i, j;
   const XML_Char *outputDir = NULL;
   const XML_Char *encoding = NULL;

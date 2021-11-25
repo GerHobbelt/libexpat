@@ -42,13 +42,24 @@
 #endif
 
 #ifdef XML_UNICODE
+#ifndef UNICODE
 #  define UNICODE
+#endif
+#ifndef _UNICODE
 #  define _UNICODE
+#endif
 #endif /* XML_UNICODE */
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
 #include "filemap.h"
+
+#ifdef XML_UNICODE_WCHAR_T
+#  include <wchar.h>
+#  define XML_FMT_STR "ls"
+#else
+#  define XML_FMT_STR "s"
+#endif
 
 static void win32perror(const TCHAR *);
 
@@ -107,14 +118,14 @@ filemap(const TCHAR *name,
 
 static void
 win32perror(const TCHAR *s) {
-  LPVOID buf;
+  LPTSTR buf;
   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                     NULL, GetLastError(),
                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&buf, 0,
                     NULL)) {
-    _ftprintf(stderr, _T("%s: %s"), s, buf);
+    _ftprintf(stderr, _T("%" XML_FMT_STR ": %" XML_FMT_STR), s, buf);
     fflush(stderr);
     LocalFree(buf);
   } else
-    _ftprintf(stderr, _T("%s: unknown Windows error\n"), s);
+    _ftprintf(stderr, _T("%" XML_FMT_STR ": unknown Windows error\n"), s);
 }

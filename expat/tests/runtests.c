@@ -7818,7 +7818,7 @@ static int XMLCALL
 external_entity_duff_loader(XML_Parser parser, const XML_Char *context,
                             const XML_Char *base, const XML_Char *systemId,
                             const XML_Char *publicId) {
-  XML_Parser new_parser;
+  XML_Parser new_parser = NULL;
   unsigned int i;
   const unsigned int max_alloc_count = 10;
 
@@ -7899,7 +7899,7 @@ external_entity_dbl_handler(XML_Parser parser, const XML_Char *context,
                             const XML_Char *publicId) {
   intptr_t callno = (intptr_t)XML_GetUserData(parser);
   const char *text;
-  XML_Parser new_parser;
+  XML_Parser new_parser = NULL;
   int i;
   const int max_alloc_count = 20;
 
@@ -7976,7 +7976,7 @@ external_entity_dbl_handler_2(XML_Parser parser, const XML_Char *context,
                               const XML_Char *publicId) {
   intptr_t callno = (intptr_t)XML_GetUserData(parser);
   const char *text;
-  XML_Parser new_parser;
+  XML_Parser new_parser = NULL;
   enum XML_Status rv;
 
   UNUSED_P(base);
@@ -11998,8 +11998,14 @@ make_suite(void) {
   return s;
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main	expat_runtests_main
+#endif
+
 int
-main(int argc, char *argv[]) {
+main(int argc, const char** argv)
+{
   int i, nf;
   int verbosity = CK_NORMAL;
   Suite *s = make_suite();
@@ -12009,7 +12015,7 @@ main(int argc, char *argv[]) {
   testhelper_is_whitespace_normalized();
 
   for (i = 1; i < argc; ++i) {
-    char *opt = argv[i];
+    const char *opt = argv[i];
     if (strcmp(opt, "-v") == 0 || strcmp(opt, "--verbose") == 0)
       verbosity = CK_VERBOSE;
     else if (strcmp(opt, "-q") == 0 || strcmp(opt, "--quiet") == 0)

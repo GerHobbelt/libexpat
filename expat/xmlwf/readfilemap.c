@@ -81,6 +81,8 @@
 #include "xmltchar.h"
 #include "filemap.h"
 
+#if !defined(HAVE_MMAP) && !defined(_WIN32)
+
 int
 filemap(const tchar *name,
         void (*processor)(const void *, size_t, const tchar *, void *arg),
@@ -143,3 +145,5 @@ filemap(const tchar *name,
   close(fd);
   return 1;
 }
+
+#endif

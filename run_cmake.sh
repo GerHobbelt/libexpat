@@ -1,6 +1,6 @@
 #! /bin/bash
 #
 
-mkdir build
-cd build
+mkdir b
+cd b
 cmake ../expat/

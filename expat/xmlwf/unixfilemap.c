@@ -34,14 +34,26 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <expat_config.h>
+
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_MMAP
 #include <sys/mman.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifndef MAP_FILE
 #  define MAP_FILE 0
@@ -55,6 +67,8 @@
 #else
 #  define XML_FMT_STR "s"
 #endif
+
+#if defined(HAVE_MMAP) && !defined(_WIN32)
 
 int
 filemap(const tchar *name,
@@ -105,3 +119,5 @@ filemap(const tchar *name,
   close(fd);
   return 1;
 }
+
+#endif
