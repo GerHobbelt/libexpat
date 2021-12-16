@@ -128,9 +128,14 @@
 extern "C" {
 #endif
 
+#if defined(_UNICODE) || defined(UNICODE)
+#define XML_UNICODE_WCHAR_T 
+#define XML_UNICODE 
+#endif
+
 #ifdef XML_UNICODE_WCHAR_T
 #  ifndef XML_UNICODE
-#    define XML_UNICODE
+#    define XML_UNICODE 
 #  endif
 #  if defined(__SIZEOF_WCHAR_T__) && (__SIZEOF_WCHAR_T__ != 2)
 #    error "sizeof(wchar_t) != 2; Need -fshort-wchar for both Expat and libc"
