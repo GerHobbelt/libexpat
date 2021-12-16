@@ -40,6 +40,13 @@
 #ifndef Expat_External_INCLUDED
 #define Expat_External_INCLUDED 1
 
+/* wxWidgets modification: always predefine XML_STATIC as we always use
+   Expat as a static library.
+*/
+#ifndef XML_STATIC
+#define XML_STATIC
+#endif
+
 /* External API definitions */
 
 /* Expat tries very hard to make the API boundary very specifically

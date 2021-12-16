@@ -146,6 +146,8 @@ supports both.
 </para>
 
     <variablelist>
+    
+    <variablelist>
 
       <varlistentry>
         <term><option>-a</option> <replaceable>factor</replaceable></term>
