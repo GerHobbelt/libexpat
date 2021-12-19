@@ -135,7 +135,7 @@
 extern "C" {
 #endif
 
-#if defined(_UNICODE) || defined(UNICODE)
+#if (defined(_UNICODE) || defined(UNICODE)) && !defined(XML_UNICODE_WCHAR_T)
 #define XML_UNICODE_WCHAR_T 
 #define XML_UNICODE 
 #endif
