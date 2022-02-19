@@ -8,7 +8,7 @@
 
    Copyright (c) 2001-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2003      Greg Stein <gstein@users.sourceforge.net>
-   Copyright (c) 2005-2007 Steven Solie <ssolie@users.sourceforge.net>
+   Copyright (c) 2005-2007 Steven Solie <steven@solie.ca>
    Copyright (c) 2005-2012 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2016-2022 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017-2018 Rhodri James <rhodri@wildebeest.org.uk>
@@ -7220,6 +7220,35 @@ START_TEST(test_ns_double_colon_doctype) {
 }
 END_TEST
 
+START_TEST(test_ns_separator_in_uri) {
+  struct test_case {
+    enum XML_Status expectedStatus;
+    const char *doc;
+  };
+  struct test_case cases[] = {
+      {XML_STATUS_OK, "<doc xmlns='one_two' />"},
+      {XML_STATUS_ERROR, "<doc xmlns='one&#x0A;two' />"},
+  };
+
+  size_t i = 0;
+  size_t failCount = 0;
+  for (; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    XML_Parser parser = XML_ParserCreateNS(NULL, '\n');
+    XML_SetElementHandler(parser, dummy_start_element, dummy_end_element);
+    if (XML_Parse(parser, cases[i].doc, (int)strlen(cases[i].doc),
+                  /*isFinal*/ XML_TRUE)
+        != cases[i].expectedStatus) {
+      failCount++;
+    }
+    XML_ParserFree(parser);
+  }
+
+  if (failCount) {
+    fail("Namespace separator handling is broken");
+  }
+}
+END_TEST
+
 /* Control variable; the number of times duff_allocator() will successfully
  * allocate */
 #define ALLOC_ALWAYS_SUCCEED (-1)
@@ -11912,6 +11941,7 @@ make_suite(void) {
   tcase_add_test(tc_namespace, test_ns_utf16_doctype);
   tcase_add_test(tc_namespace, test_ns_invalid_doctype);
   tcase_add_test(tc_namespace, test_ns_double_colon_doctype);
+  tcase_add_test(tc_namespace, test_ns_separator_in_uri);
 
   suite_add_tcase(s, tc_misc);
   tcase_add_checked_fixture(tc_misc, NULL, basic_teardown);
