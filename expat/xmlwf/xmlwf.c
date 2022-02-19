@@ -1133,6 +1133,8 @@ tmain(int argc, const XML_Char **argv) {
 #ifdef XML_DTD
       XML_SetBillionLaughsAttackProtectionActivationThreshold(
           parser, attackThresholdBytes);
+#else
+      (void)attackThresholdBytes; // silence -Wunused-but-set-variable
 #endif
     }
 
