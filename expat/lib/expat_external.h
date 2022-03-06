@@ -153,13 +153,19 @@ extern "C" {
 #  ifdef XML_UNICODE_WCHAR_T
 typedef wchar_t XML_Char;
 typedef wchar_t XML_LChar;
+#    define EXPAT_FORMAT_XML_CHAR          "%ls"
+#    define EXPAT_FORMAT_XML_LCHAR         "%ls"
 #  else
 typedef unsigned short XML_Char;
 typedef char XML_LChar;
+#    define EXPAT_FORMAT_XML_CHAR          "%ls"
+#    define EXPAT_FORMAT_XML_LCHAR         "%s"
 #  endif /* XML_UNICODE_WCHAR_T */
 #else    /* Information is UTF-8 encoded. */
 typedef char XML_Char;
 typedef char XML_LChar;
+#    define EXPAT_FORMAT_XML_CHAR          "%s"
+#    define EXPAT_FORMAT_XML_LCHAR         "%s"
 #endif   /* XML_UNICODE */
 
 #ifdef XML_LARGE_SIZE /* Use large integers for file/stream positions. */
