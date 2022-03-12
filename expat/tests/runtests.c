@@ -54,6 +54,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdint.h> /* intptr_t uint64_t */
+#include <math.h>   /* isnan isinf */
 
 #if ! defined(__cplusplus)
 #  include <stdbool.h>
