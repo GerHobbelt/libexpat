@@ -5,7 +5,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2021-2022 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2020-2021 Sebastian Pipping <sebastian@pipping.org>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -27,7 +27,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Ensure realistic minimum CMake version requirement
+name: Check expat_config.h.{in,cmake} for regressions
 
 on:
   pull_request:
@@ -37,36 +37,22 @@ on:
 
 jobs:
   checks:
-    name: Ensure realistic minimum CMake version requirement
-    runs-on: ubuntu-20.04
+    name: Check expat_config.h.{in,cmake} for regressions
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-
-    - name: Install ancient CMake
+    - name: Check expat_config.h.{in,cmake} for regressions
       run: |
-        set -ux
+        set -v
+        # A non-empty diff indicates a change in the list of macros exported:
+        # - Removals would be trouble (because expat_config.h is installed).
+        # - Additions could use an extra check by a human
+        ( cd expat && ./buildconf.sh )  # generate expat_config.h.in
+        diff -u <(sort < .github/workflows/data/expat_config_h_in__expected.txt) <(.github/workflows/scripts/list_exported_macros.sh expat/expat_config.h.in)
+        diff -u <(sort < .github/workflows/data/expat_config_h_cmake__expected.txt) <(.github/workflows/scripts/list_exported_macros.sh expat/expat_config.h.cmake)
 
-        needed_cmake_version="$(sed -n 's/cmake_minimum_required(VERSION \(.*\))/\1/p' expat/CMakeLists.txt)"
-
-        installer_filename="cmake-${needed_cmake_version}-linux-x86_64.sh"
-        download_url="https://github.com/Kitware/CMake/releases/download/v${needed_cmake_version}/${installer_filename}"
-        wget --no-verbose "${download_url}"
-
-        chmod +x "${installer_filename}"
-        mkdir ~/.local/
-
-        ./"${installer_filename}" --prefix="${HOME}"/.local/ --skip-license
-
-        hash cmake  # or the running shell will keep using the cached old location
-        present_cmake_version="$(cmake --version | sed -n 's/cmake version \(.*\)/\1/p')"
-        [[ ${present_cmake_version} = ${needed_cmake_version} ]]
-
-    - name: Build libexpat using ancient CMake
-      run: |
-        set -ux
-        mkdir expat/build
-        cd expat/build
-        cmake --version
-        cmake ..
-        make VERBOSE=1 all test install DESTDIR="${PWD}/ROOT/"
-        find ROOT/ -not -type d | sort
+        # Informational (and not an ideal state)
+        diff -u \
+            <(sort < .github/workflows/data/expat_config_h_in__expected.txt) \
+            <(sort < .github/workflows/data/expat_config_h_cmake__expected.txt) \
+            || true
