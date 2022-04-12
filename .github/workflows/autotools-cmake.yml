@@ -55,11 +55,13 @@ jobs:
         shell: bash
     runs-on: "${{ matrix.os }}"
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3.0.0
 
     - name: (Linux) Install build dependencies
       if: "${{ runner.os == 'Linux' }}"
       run: |-
+        set -x
+        sudo apt-get update
         sudo apt-get install --yes --no-install-recommends -V \
             cmake \
             docbook2x \
