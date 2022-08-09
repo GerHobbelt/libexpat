@@ -108,25 +108,25 @@ else()
     set(_EXPAT_SHARED_LIBS_DEFAULT ON)
 endif()
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE NoConfig)  # so that accessing CMAKE_*_POSTFIX will be waterproof
+    set(CMAKE_BUILD_TYPE NoConfig)  # so that accessing EXPAT_*_POSTFIX will be waterproof
 endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _EXPAT_BUILD_TYPE_UPPER)
 
 #
 # Configuration
 #
-option(EXPAT_BUILD_TOOLS "build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
-option(EXPAT_BUILD_EXAMPLES "build the examples for expat library" ON)
-option(EXPAT_BUILD_TESTS "build the tests for expat library" ON)
-option(EXPAT_SHARED_LIBS "build a shared expat library" ${_EXPAT_SHARED_LIBS_DEFAULT})
-option(EXPAT_BUILD_DOCS "build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
-option(EXPAT_BUILD_FUZZERS "build fuzzers for the expat library" OFF)
-option(EXPAT_BUILD_PKGCONFIG "build pkg-config file" ${_EXPAT_BUILD_PKGCONFIG_DEFAULT})
-option(EXPAT_OSSFUZZ_BUILD "build fuzzers via ossfuzz for the expat library" OFF)
+option(EXPAT_BUILD_TOOLS "Build the xmlwf tool for expat library" ${_EXPAT_BUILD_TOOLS_DEFAULT})
+option(EXPAT_BUILD_EXAMPLES "Build the examples for expat library" ON)
+option(EXPAT_BUILD_TESTS "Build the tests for expat library" ON)
+option(EXPAT_SHARED_LIBS "Build a shared expat library" ${_EXPAT_SHARED_LIBS_DEFAULT})
+option(EXPAT_BUILD_DOCS "Build man page for xmlwf" ${_EXPAT_BUILD_DOCS_DEFAULT})
+option(EXPAT_BUILD_FUZZERS "Build fuzzers for the expat library" OFF)
+option(EXPAT_BUILD_PKGCONFIG "Build pkg-config file" ${_EXPAT_BUILD_PKGCONFIG_DEFAULT})
+option(EXPAT_OSSFUZZ_BUILD "Build fuzzers via ossfuzz for the expat library" OFF)
 if(UNIX OR _EXPAT_HELP)
-    option(EXPAT_WITH_LIBBSD "utilize libbsd (for arc4random_buf)" OFF)
+    option(EXPAT_WITH_LIBBSD "Utilize libbsd (for arc4random_buf)" OFF)
 endif()
-option(EXPAT_ENABLE_INSTALL "install expat files in cmake install target" ON)
+option(EXPAT_ENABLE_INSTALL "Install expat files in cmake install target" ON)
 set(EXPAT_CONTEXT_BYTES 1024 CACHE STRING "Define to specify how much context to retain around the current parse point")
 mark_as_advanced(EXPAT_CONTEXT_BYTES)
 option(EXPAT_DTD "Define to make parameter entity parsing functionality available" ON)
@@ -349,37 +349,6 @@ if(MSVC)
 endif()
 
 #
-# Library filename postfix
-#
-if(_EXPAT_UNICODE)
-    set(_POSTFIX_WIDE "w")
-endif()
-
-if(MSVC AND NOT EXPAT_SHARED_LIBS)
-    if(EXPAT_MSVC_STATIC_CRT)
-        set(_POSTFIX_CRT "MT")
-    else()
-        set(_POSTFIX_CRT "MD")
-    endif()
-endif()
-
-foreach(postfix_var
-        CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX
-        CMAKE_DEBUG_POSTFIX
-        CMAKE_RELEASE_POSTFIX
-        CMAKE_MINSIZEREL_POSTFIX
-        CMAKE_RELWITHDEBINFO_POSTFIX
-        )
-    if(WIN32 AND postfix_var STREQUAL "CMAKE_DEBUG_POSTFIX")
-        set(_POSTFIX_DEBUG "d")
-    else()
-        set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
-    endif()
-
-    set(${postfix_var} "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix, e.g. libexpat<postfix=[w][d][MD|MT]>.lib")
-endforeach()
-
-#
 # C library
 #
 set(_EXPAT_C_SOURCES
@@ -393,10 +362,21 @@ set(_EXPAT_C_SOURCES
 
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
-    if(MSVC)
-        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} lib/libexpat.def)
-    endif()
     if(WIN32)
+        macro(_expat_def_file_toggle source_var target_var)
+            if(${source_var})
+                set(${target_var} " ")  # i.e. not commented out, a single space
+            else()
+                set(${target_var} ";")  # i.e. commented out
+            endif()
+        endmacro()
+
+        _expat_def_file_toggle(EXPAT_DTD _EXPAT_COMMENT_DTD)
+        _expat_def_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
+
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.def.cmake" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")
+        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")
+
         # Add DLL version
         string(REPLACE "." "," _EXPAT_DLL_VERSION ${PROJECT_VERSION}.0)
         set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} win32/version.rc)
@@ -412,6 +392,38 @@ endif()
 if(EXPAT_WITH_LIBBSD)
     target_link_libraries(expat ${LIB_BSD})
 endif()
+
+#
+# Library filename postfix
+#
+if(_EXPAT_UNICODE)
+    set(_POSTFIX_WIDE "w")
+endif()
+
+if(MSVC AND NOT EXPAT_SHARED_LIBS)
+    if(EXPAT_MSVC_STATIC_CRT)
+        set(_POSTFIX_CRT "MT")
+    else()
+        set(_POSTFIX_CRT "MD")
+    endif()
+endif()
+
+foreach(build_type_upper
+        ${_EXPAT_BUILD_TYPE_UPPER}
+        DEBUG
+        RELEASE
+        MINSIZEREL
+        RELWITHDEBINFO
+        )
+    if(WIN32 AND build_type_upper STREQUAL "DEBUG")
+        set(_POSTFIX_DEBUG "d")
+    else()
+        set(_POSTFIX_DEBUG "")  # needs a reset because of being looped
+    endif()
+
+    set(EXPAT_${build_type_upper}_POSTFIX "${_POSTFIX_WIDE}${_POSTFIX_DEBUG}${_POSTFIX_CRT}" CACHE STRING "Library filename postfix for build type ${build_type_upper}; yields filenames libexpat<postfix=[w][d][MD|MT]>.(dll|dylib|lib|so)")
+    set_property(TARGET expat PROPERTY ${build_type_upper}_POSTFIX ${EXPAT_${build_type_upper}_POSTFIX})
+endforeach()
 
 set(LIBCURRENT 9)   # sync
 set(LIBREVISION 8)  # with
@@ -435,6 +447,11 @@ if(NOT WIN32)
         set_property(TARGET expat PROPERTY MACHO_CURRENT_VERSION ${_EXPAT_MACHO_CURRENT_VERSION})
     endif()
 endif()
+
+if(MINGW)
+    set_target_properties(expat PROPERTIES SUFFIX "-${LIBCURRENT_MINUS_AGE}.dll")
+endif()
+
 if(WIN32 AND NOT MINGW)
     # NOTE: This avoids a name collision with Expat.dll of Perl's XML::Parser::Expat
     #       on Windows by resorting to filename libexpat.dll since Expat 1.95.3.
@@ -849,7 +866,7 @@ if(MSVC)
 endif()
 message(STATUS "  Character type ............. ${_EXPAT_CHAR_TYPE_SUMMARY}")
 if(NOT _EXPAT_GENERATOR_IS_MULTI_CONFIG)
-    message(STATUS "  Library name postfix ....... ${CMAKE_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
+    message(STATUS "  Library name postfix ....... ${EXPAT_${_EXPAT_BUILD_TYPE_UPPER}_POSTFIX}")
 endif()
 message(STATUS "")
 message(STATUS "  Build documentation ........ ${EXPAT_BUILD_DOCS}")
