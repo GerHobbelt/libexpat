@@ -40,6 +40,9 @@
 #ifndef Expat_External_INCLUDED
 #define Expat_External_INCLUDED 1
 
+#ifndef XML_UNICODE_WCHAR_T
+#define XML_UNICODE_WCHAR_T
+
 /* External API definitions */
 
 /* Expat tries very hard to make the API boundary very specifically
