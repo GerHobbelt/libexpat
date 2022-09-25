@@ -3,6 +3,11 @@ NOTE: We are looking for help with a few things:
       If you can help, please get in touch.  Thanks!
 
 Release x.x.x xxx xxxxx xx xxxx
+        Security fixes:
+       #629 #640  CVE-2022-40674 -- Heap use-after-free vulnerability in
+                    function doContent. Expected impact is denial of service
+                    or potentially arbitrary code execution.
+
         Bug fixes:
             #634  MinGW: Fix mis-compilation for -D__USE_MINGW_ANSI_STDIO=0
 
@@ -23,17 +28,29 @@ Release x.x.x xxx xxxxx xx xxxx
             #632  MinGW|CMake: Set missing variable CMAKE_RC_COMPILER in
                     toolchain file "cmake/mingw-toolchain.cmake" to avoid
                     error "windres: Command not found" on e.g. Ubuntu 20.04
+       #597 #626  CMake: Unify inconsistent use of set() and option() in
+                    context of public build time options to take need for
+                    set(.. FORCE) in projects using Expat by means of
+                    add_subdirectory(..) off Expat's users' shoulders
+       #626 #641  Stop exporting API symbols when building a static library
             #620  CMake: Make documentation on variables a bit more consistent
             #610  Address Cppcheck 2.8.1 warning
+            #643  Address Clang 15 compiler warnings
 
         Infrastructure:
        #597 #598  CI: Windows: Start covering MSVC 2022
             #632  CI: Linux: Make migration off deprecated Ubuntu 18.04 work
+            #643  CI: Upgrade Clang from 14 to 15
 
         Special thanks to:
             David Faure
+            Felix Wilhelm
+            Frank Bergmann
+            Rhodri James
             Rosen Penev
             Vincent Torri
+                 and
+            Google Project Zero
 
 Release 2.4.8 Mon March 28 2022
         Other changes:
