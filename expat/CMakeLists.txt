@@ -362,10 +362,21 @@ set(_EXPAT_C_SOURCES
 
 if(EXPAT_SHARED_LIBS)
     set(_SHARED SHARED)
-    if(MSVC)
-        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} lib/libexpat.def)
-    endif()
     if(WIN32)
+        macro(_expat_def_file_toggle source_var target_var)
+            if(${source_var})
+                set(${target_var} " ")  # i.e. not commented out, a single space
+            else()
+                set(${target_var} ";")  # i.e. commented out
+            endif()
+        endmacro()
+
+        _expat_def_file_toggle(EXPAT_DTD _EXPAT_COMMENT_DTD)
+        _expat_def_file_toggle(EXPAT_ATTR_INFO _EXPAT_COMMENT_ATTR_INFO)
+
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/libexpat.def.cmake" "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")
+        set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/lib/libexpat.def")
+
         # Add DLL version
         string(REPLACE "." "," _EXPAT_DLL_VERSION ${PROJECT_VERSION}.0)
         set(_EXPAT_EXTRA_SOURCES ${_EXPAT_EXTRA_SOURCES} win32/version.rc)
@@ -436,6 +447,11 @@ if(NOT WIN32)
         set_property(TARGET expat PROPERTY MACHO_CURRENT_VERSION ${_EXPAT_MACHO_CURRENT_VERSION})
     endif()
 endif()
+
+if(MINGW)
+    set_target_properties(expat PROPERTIES SUFFIX "-${LIBCURRENT_MINUS_AGE}.dll")
+endif()
+
 if(WIN32 AND NOT MINGW)
     # NOTE: This avoids a name collision with Expat.dll of Perl's XML::Parser::Expat
     #       on Windows by resorting to filename libexpat.dll since Expat 1.95.3.
