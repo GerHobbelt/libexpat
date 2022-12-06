@@ -3016,9 +3016,6 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
         int len;
         const char *rawName;
         TAG *tag = parser->m_tagStack;
-        parser->m_tagStack = tag->parent;
-        tag->parent = parser->m_freeTagList;
-        parser->m_freeTagList = tag;
         rawName = s + enc->minBytesPerChar * 2;
         len = XmlNameLength(enc, rawName);
         if (len != tag->rawNameLength
@@ -3026,6 +3023,9 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           *eventPP = rawName;
           return XML_ERROR_TAG_MISMATCH;
         }
+        parser->m_tagStack = tag->parent;
+        tag->parent = parser->m_freeTagList;
+        parser->m_freeTagList = tag;
         --parser->m_tagLevel;
         if (parser->m_endElementHandler) {
           const XML_Char *localPart;
@@ -5803,20 +5803,20 @@ internalEntityProcessor(XML_Parser parser, const char *s, const char *end,
 
   if (result != XML_ERROR_NONE)
     return result;
-  else if (textEnd != next
-           && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
+
+  if (textEnd != next && parser->m_parsingStatus.parsing == XML_SUSPENDED) {
     entity->processed = (int)(next - (const char *)entity->textPtr);
     return result;
-  } else {
-#ifdef XML_DTD
-    entityTrackingOnClose(parser, entity, __LINE__);
-#endif
-    entity->open = XML_FALSE;
-    parser->m_openInternalEntities = openEntity->next;
-    /* put openEntity back in list of free instances */
-    openEntity->next = parser->m_freeInternalEntities;
-    parser->m_freeInternalEntities = openEntity;
   }
+
+#ifdef XML_DTD
+  entityTrackingOnClose(parser, entity, __LINE__);
+#endif
+  entity->open = XML_FALSE;
+  parser->m_openInternalEntities = openEntity->next;
+  /* put openEntity back in list of free instances */
+  openEntity->next = parser->m_freeInternalEntities;
+  parser->m_freeInternalEntities = openEntity;
 
 #ifdef XML_DTD
   if (entity->is_param) {
