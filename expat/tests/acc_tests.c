@@ -41,6 +41,7 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <math.h> /* NAN, INFINITY */
 #include <stdio.h>
 #include <string.h>
 
@@ -292,16 +293,6 @@ START_TEST(test_accounting_precision) {
 }
 END_TEST
 
-static float
-portableNAN(void) {
-  return strtof("nan", NULL);
-}
-
-static float
-portableINFINITY(void) {
-  return strtof("infinity", NULL);
-}
-
 START_TEST(test_billion_laughs_attack_protection_api) {
   XML_Parser parserWithoutParent = XML_ParserCreate(NULL);
   XML_Parser parserWithParent = XML_ExternalEntityParserCreate(
@@ -320,7 +311,7 @@ START_TEST(test_billion_laughs_attack_protection_api) {
       == XML_TRUE)
     fail("Call with non-root parser is NOT supposed to succeed");
   if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
-          parserWithoutParent, portableNAN())
+          parserWithoutParent, NAN)
       == XML_TRUE)
     fail("Call with NaN limit is NOT supposed to succeed");
   if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
@@ -342,7 +333,7 @@ START_TEST(test_billion_laughs_attack_protection_api) {
       == XML_FALSE)
     fail("Call with positive limit >=1.0 is supposed to succeed");
   if (XML_SetBillionLaughsAttackProtectionMaximumAmplification(
-          parserWithoutParent, portableINFINITY())
+          parserWithoutParent, INFINITY)
       == XML_FALSE)
     fail("Call with positive limit >=1.0 is supposed to succeed");
 
