@@ -5,7 +5,10 @@ NOTE: We are looking for help with a few things:
 Release 2.5.1 xxx xxxxxxx xx xxxx
         Other changes:
             #673  examples: Add new example "element_declarations.c"
-            #678  Autotools: Sync CMake templates with CMake 3.23
+  #678 #706 #733  Autotools: Sync CMake templates with CMake 3.25
+
+        Infrastructure:
+       #698 #721  CI: Resolve some Travis CI leftovers
 
 Release 2.5.0 Tue October 25 2022
         Security fixes:
@@ -16,7 +19,7 @@ Release 2.5.0 Tue October 25 2022
                     arbitrary code execution.
 
         Bug fixes:
-       #612 #645  Fix curruption from undefined entities
+       #612 #645  Fix corruption from undefined entities
        #613 #654  Fix case when parsing was suspended while processing nested
                     entities
   #616 #652 #653  Stop leaking opening tag bindings after a closing tag
