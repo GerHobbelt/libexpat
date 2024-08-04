@@ -65,6 +65,16 @@
 
 #include "expat_config.h"
 
+#ifdef _WIN32
+/* force stdlib to define rand_s() */
+#  if ! defined(_CRT_RAND_S)
+#    define _CRT_RAND_S
+#  endif
+#endif
+
+#include "expat.h"
+#include "internal.h"
+
 #if ! defined(XML_GE) || (1 - XML_GE - 1 == 2) || (XML_GE < 0) || (XML_GE > 1)
 #  error XML_GE (for general entities) must be defined, non-empty, either 1 or 0 (0 to disable, 1 to enable; 1 is a common default)
 #endif
@@ -81,13 +91,6 @@
 #if defined(HAVE_SYSCALL_GETRANDOM)
 #  if ! defined(_GNU_SOURCE)
 #    define _GNU_SOURCE 1 /* syscall prototype */
-#  endif
-#endif
-
-#ifdef _WIN32
-/* force stdlib to define rand_s() */
-#  if ! defined(_CRT_RAND_S)
-#    define _CRT_RAND_S
 #  endif
 #endif
 
@@ -631,7 +634,7 @@ static unsigned long getDebugLevel(const char *variableName,
        : ((*((pool)->ptr)++ = c), 1))
 
 #if ! defined(XML_TESTING)
-const
+//const
 #endif
     XML_Bool g_reparseDeferralEnabledDefault
     = XML_TRUE; // write ONLY in runtests.c
