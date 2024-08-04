@@ -416,7 +416,7 @@ typedef struct accounting {
   XmlBigCount countBytesDirect;
   XmlBigCount countBytesIndirect;
   float peakAmplificationFactor;
-  int debugLevel;
+  unsigned long debugLevel;
   float maximumAmplificationFactor; // >=1.0
   unsigned long long activationThresholdBytes;
 } ACCOUNTING;
@@ -425,7 +425,7 @@ typedef struct entity_stats {
   unsigned int countEverOpened;
   unsigned int currentDepth;
   unsigned int maximumDepthSeen;
-  int debugLevel;
+  unsigned long debugLevel;
 } ENTITY_STATS;
 #endif /* XML_DTD */
 
@@ -7679,7 +7679,7 @@ accountingReportStats(XML_Parser originParser, const char *epilog) {
   const XML_Parser rootParser = getRootParserOf(originParser, NULL);
   assert(! rootParser->m_parentParser);
 
-  if (rootParser->m_accounting.debugLevel < 1) {
+  if (rootParser->m_accounting.debugLevel == 0u) {
     return;
   }
 
@@ -7716,7 +7716,7 @@ accountingReportDiff(XML_Parser rootParser,
 
   /* Note: Performance is of no concern here */
   const char *walker = before;
-  if ((rootParser->m_accounting.debugLevel >= 3)
+  if ((rootParser->m_accounting.debugLevel >= 3u)
       || (after - before)
              <= (ptrdiff_t)(contextLength + ellipsisLength + contextLength)) {
     for (; walker < after; walker++) {
@@ -7784,7 +7784,7 @@ accountingDiffTolerated(XML_Parser originParser, int tok, const char *before,
         || (amplificationFactor
             <= rootParser->m_accounting.maximumAmplificationFactor);
 
-  if (rootParser->m_accounting.debugLevel >= 2) {
+  if (rootParser->m_accounting.debugLevel >= 2u) {
     accountingReportStats(rootParser, "");
     accountingReportDiff(rootParser, levelsAwayFromRootParser, before, after,
                          bytesMore, source_line, account);
@@ -7811,7 +7811,7 @@ static void
 entityTrackingReportStats(XML_Parser rootParser, ENTITY *entity,
                           const char *action, int sourceLine) {
   assert(! rootParser->m_parentParser);
-  if (rootParser->m_entity_stats.debugLevel < 1)
+  if (rootParser->m_entity_stats.debugLevel == 0u)
     return;
 
 #  if defined(XML_UNICODE)
