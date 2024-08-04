@@ -5,7 +5,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2021-2022 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2024      Sebastian Pipping <sebastian@pipping.org>
 # Licensed under the MIT license:
 #
 # Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -27,26 +27,38 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 # USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-name: Run Cppcheck (from macOS Homebrew)
+name: Enforce clang-tidy clean code
 
 on:
   pull_request:
   push:
   schedule:
     - cron: '0 2 * * 5'  # Every Friday at 2am
-
+  workflow_dispatch:
+    
 permissions:
   contents: read
 
 jobs:
-  checks:
-    name: Run Cppcheck
-    runs-on: macos-12
+  clang_tidy:
+    name: Enforce clang-tidy clean code
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
-    - name: Install runtime dependencies
+
+    - name: Install clang-tidy 18
+      run: |-
+        set -x
+        source /etc/os-release
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb https://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-18 main"
+        sudo apt-get update  # due to new repository
+        sudo apt-get install --yes --no-install-recommends -V \
+            clang-tidy-18
+        echo /usr/lib/llvm-18/bin >>"${GITHUB_PATH}"
+
+    - name: Run clang-tidy
       run: |
-        exec brew install cppcheck findutils
-    - name: Run Cppcheck
-      run: |
-        exec .github/workflows/scripts/mass-cppcheck.sh
+        set -x
+        cd expat/
+        ./apply-clang-tidy.sh
