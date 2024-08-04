@@ -45,6 +45,8 @@
 #  undef NDEBUG /* because test suite relies on assert(...) at the moment */
 #endif
 
+#define XML_TESTING 1
+
 #include <assert.h>
 
 #include <stdio.h>
@@ -3206,7 +3208,7 @@ static int XMLCALL
 external_bom_checker(XML_Parser parser, const XML_Char *context,
                      const XML_Char *base, const XML_Char *systemId,
                      const XML_Char *publicId) {
-  const char *text;
+  const char *text = NULL;
   UNUSED_P(base);
   UNUSED_P(systemId);
   UNUSED_P(publicId);

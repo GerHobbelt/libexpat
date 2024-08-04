@@ -164,7 +164,7 @@ const char *unsignedCharToPrintable(unsigned char c);
 
 extern
 #if ! defined(XML_TESTING)
-    const
+    //const
 #endif
     XML_Bool g_reparseDeferralEnabledDefault; // written ONLY in runtests.c
 #if defined(XML_TESTING)

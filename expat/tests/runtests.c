@@ -42,6 +42,8 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define XML_TESTING 1
+
 #include "expat_config.h"
 
 #include <stdio.h>
@@ -91,7 +93,7 @@ main(int argc, const char** argv) {
   SRunner *sr = srunner_create(s);
 
   for (i = 1; i < argc; ++i) {
-    char *opt = argv[i];
+    const char *opt = argv[i];
     if (strcmp(opt, "-v") == 0 || strcmp(opt, "--verbose") == 0)
       verbosity = CK_VERBOSE;
     else if (strcmp(opt, "-q") == 0 || strcmp(opt, "--quiet") == 0)
