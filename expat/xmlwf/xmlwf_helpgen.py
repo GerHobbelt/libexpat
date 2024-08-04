@@ -33,11 +33,11 @@ import argparse
 
 epilog = """
 exit status:
-  0             the input files are well-formed and the output (if requested) was written successfully
-  1             could not allocate data structures, signals a serious problem with execution environment
-  2             one or more input files were not well-formed
-  3             could not create an output file
-  4             command-line argument error
+  0              the input files are well-formed and the output (if requested) was written successfully
+  1              could not allocate data structures, signals a serious problem with execution environment
+  2              one or more input files were not well-formed
+  3              could not create an output file
+  4              command-line argument error
 
 xmlwf of libexpat is software libre, licensed under the MIT license.
 Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!
@@ -45,8 +45,8 @@ Please report bugs at https://github.com/libexpat/libexpat/issues -- thank you!
 
 usage = """
   %(prog)s [OPTIONS] [FILE ...]
-  %(prog)s -h
-  %(prog)s -v
+  %(prog)s -h|--help
+  %(prog)s -v|--version
 """
 
 parser = argparse.ArgumentParser(prog='xmlwf', add_help=False,
@@ -63,6 +63,7 @@ input_related.add_argument('-x', action='store_true', help='enable processing of
 input_related.add_argument('-e', action='store', metavar='ENCODING', help='override any in-document [e]ncoding declaration')
 input_related.add_argument('-w', action='store_true', help='enable support for [W]indows code pages')
 input_related.add_argument('-r', action='store_true', help='disable memory-mapping and use [r]ead calls instead')
+input_related.add_argument('-g', metavar='BYTES', help='buffer size to request per call pair to XML_[G]etBuffer and read (default: 8 KiB)')
 input_related.add_argument('-k', action='store_true', help='when processing multiple files, [k]eep processing after first file with error')
 
 output_related = parser.add_argument_group('output control arguments')
@@ -85,8 +86,8 @@ parser.add_argument('files', metavar='FILE', nargs='*', help='file to process (d
 
 info = parser.add_argument_group('info arguments')
 info = info.add_mutually_exclusive_group()
-info.add_argument('-h', action='store_true', help='show this [h]elp message and exit')
-info.add_argument('-v', action='store_true', help='show program\'s [v]ersion number and exit')
+info.add_argument('-h', '--help', action='store_true', help='show this [h]elp message and exit')
+info.add_argument('-v', '--version', action='store_true', help='show program\'s [v]ersion number and exit')
 
 
 if __name__ == '__main__':
