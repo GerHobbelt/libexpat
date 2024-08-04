@@ -447,8 +447,7 @@ printTabs(char *tab) {
 #endif
 
 int
-main(int argc, const char** argv)
-{
+main(void) {
   char tab[2 * 65536];
   memset(tab, 0, 65536);
   setTab(tab, nmstrt, sizeof(nmstrt) / sizeof(nmstrt[0]));

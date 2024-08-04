@@ -20,7 +20,7 @@ Expat supports the following compilers:
 
 - GNU GCC >=4.5
 - LLVM Clang >=3.5
-- Microsoft Visual Studio >=15.0/2017 (rolling `${today} minus 5 years`)
+- Microsoft Visual Studio >=16.0/2019 (rolling `${today} minus 5 years`)
 
 Windows users can use the
 [`expat-win32bin-*.*.*.{exe,zip}` download](https://github.com/libexpat/libexpat/releases),
@@ -158,7 +158,7 @@ support this mode of compilation (yet):
 
 1. Mass-patch `Makefile.am` files to use `libexpatw.la` for a library name:
    <br/>
-   `find -name Makefile.am -exec sed
+   `find . -name Makefile.am -exec sed
        -e 's,libexpat\.la,libexpatw.la,'
        -e 's,libexpat_la,libexpatw_la,'
        -i {} +`
