@@ -14,8 +14,9 @@
 
    Copyright (c) 2004-2006 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2006-2012 Karl Waclawek <karl@waclawek.net>
-   Copyright (c) 2016-2017 Sebastian Pipping <sebastian@pipping.org>
-   Copyright (c) 2023      Sony Corporation / Snild Dolkow <snild@sony.com>
+   Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2022      Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2023-2024 Sony Corporation / Snild Dolkow <snild@sony.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -83,9 +84,13 @@ extern "C" {
 
 void PRINTF_LIKE(1, 2) set_subtest(char const *fmt, ...);
 
-#  define fail(msg) _assert_true(0, __FILE__, __LINE__, msg)
+#  define fail(msg) _fail(__FILE__, __LINE__, msg)
 #  define assert_true(cond)                                                    \
-    _assert_true((cond), __FILE__, __LINE__, "check failed: " #cond)
+    do {                                                                       \
+      if (! (cond)) {                                                          \
+        _fail(__FILE__, __LINE__, "check failed: " #cond);                     \
+      }                                                                        \
+    } while (0)
 
 typedef void (*tcase_setup_function)(void);
 typedef void (*tcase_teardown_function)(void);
@@ -124,7 +129,11 @@ void _check_set_test_info(char const *function, char const *filename,
  * Prototypes for the actual implementation.
  */
 
-void _assert_true(int condition, const char *file, int line, const char *msg);
+#  if defined(__GNUC__)
+__attribute__((noreturn))
+#  endif
+void
+_fail(const char *file, int line, const char *msg);
 Suite *suite_create(const char *name);
 TCase *tcase_create(const char *name);
 void suite_add_tcase(Suite *suite, TCase *tc);
