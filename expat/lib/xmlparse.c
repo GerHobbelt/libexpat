@@ -1,4 +1,4 @@
-/* dd2a9703e301882afe16d198a82689ab225277057f5eab9d079d8606eab736b4 (2.6.1+)
+/* 2a14271ad4d35e82bde8ba210b4edb7998794bcbae54deab114046a300f9639a (2.6.2+)
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -6245,7 +6245,7 @@ storeEntityValue(XML_Parser parser, const ENCODING *enc,
           dtd->keepProcessing = dtd->standalone;
           goto endEntityValue;
         }
-        if (entity->open) {
+        if (entity->open || (entity == parser->m_declEntity)) {
           if (enc == parser->m_encoding)
             parser->m_eventPtr = entityTextPtr;
           result = XML_ERROR_RECURSIVE_ENTITY_REF;
