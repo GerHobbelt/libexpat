@@ -1101,9 +1101,10 @@ tmain(int argc, const XML_Char **argv) {
             " (needs a floating point number greater or equal than 1.0)"));
         exit(XMLWF_EXIT_USAGE_ERROR);
       }
-#ifndef XML_DTD
-      ftprintf(stderr, T("Warning: Given amplification limit ignored") T(
-                           ", xmlwf has been compiled without DTD support.\n"));
+#if XML_GE == 0
+      ftprintf(stderr,
+               T("Warning: Given amplification limit ignored")
+                   T(", xmlwf has been compiled without DTD/GE support.\n"));
 #endif
       break;
     }
@@ -1122,9 +1123,10 @@ tmain(int argc, const XML_Char **argv) {
         exit(XMLWF_EXIT_USAGE_ERROR);
       }
       attackThresholdGiven = XML_TRUE;
-#ifndef XML_DTD
-      ftprintf(stderr, T("Warning: Given attack threshold ignored") T(
-                           ", xmlwf has been compiled without DTD support.\n"));
+#if XML_GE == 0
+      ftprintf(stderr,
+               T("Warning: Given attack threshold ignored")
+                   T(", xmlwf has been compiled without DTD/GE support.\n"));
 #endif
       break;
     }
@@ -1160,13 +1162,13 @@ tmain(int argc, const XML_Char **argv) {
     }
 
     if (attackMaximumAmplification != -1.0f) {
-#ifdef XML_DTD
+#if XML_GE == 1
       XML_SetBillionLaughsAttackProtectionMaximumAmplification(
           parser, attackMaximumAmplification);
 #endif
     }
     if (attackThresholdGiven) {
-#ifdef XML_DTD
+#if XML_GE == 1
       XML_SetBillionLaughsAttackProtectionActivationThreshold(
           parser, attackThresholdBytes);
 #else
