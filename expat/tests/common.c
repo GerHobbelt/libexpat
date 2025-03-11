@@ -10,7 +10,7 @@
    Copyright (c) 2003      Greg Stein <gstein@users.sourceforge.net>
    Copyright (c) 2005-2007 Steven Solie <steven@solie.ca>
    Copyright (c) 2005-2012 Karl Waclawek <karl@waclawek.net>
-   Copyright (c) 2016-2023 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2024 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017-2022 Rhodri James <rhodri@wildebeest.org.uk>
    Copyright (c) 2017      Joe Orton <jorton@redhat.com>
    Copyright (c) 2017      José Gutiérrez de la Concha <jose@zeroc.com>
@@ -202,6 +202,12 @@ _XML_Parse_SINGLE_BYTES(XML_Parser parser, const char *s, int len,
     for (; len > chunksize; len -= chunksize, s += chunksize) {
       enum XML_Status res = XML_Parse(parser, s, chunksize, XML_FALSE);
       if (res != XML_STATUS_OK) {
+        if ((res == XML_STATUS_SUSPENDED) && (len > chunksize)) {
+          fail("Use of function _XML_Parse_SINGLE_BYTES with a chunk size "
+               "greater than 0 (from g_chunkSize) does not work well with "
+               "suspension. Please consider use of plain XML_Parse at this "
+               "place in your test, instead.");
+        }
         return res;
       }
     }

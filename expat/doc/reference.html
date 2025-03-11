@@ -53,7 +53,7 @@
   <div>
     <h1>
       The Expat XML Parser
-      <small>Release 2.6.3</small>
+      <small>Release 2.6.4</small>
     </h1>
   </div>
 <div class="content">
@@ -1268,6 +1268,11 @@ call-backs, except when parsing an external parameter entity and
 <code>XML_STATUS_ERROR</code> otherwise.  The possible error codes
 are:</p>
 <dl>
+  <dt><code>XML_ERROR_NOT_STARTED</code></dt>
+  <dd>
+    when stopping or suspending a parser before it has started,
+    added in Expat 2.6.4.
+  </dd>
   <dt><code>XML_ERROR_SUSPENDED</code></dt>
   <dd>when suspending an already suspended parser.</dd>
   <dt><code>XML_ERROR_FINISHED</code></dt>

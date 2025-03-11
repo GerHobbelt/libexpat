@@ -1193,6 +1193,22 @@ START_TEST(test_not_standalone_handler_accept) {
 }
 END_TEST
 
+START_TEST(test_entity_start_tag_level_greater_than_one) {
+  const char *const text = "<!DOCTYPE t1 [\n"
+                           "  <!ENTITY e1 'hello'>\n"
+                           "]>\n"
+                           "<t1>\n"
+                           "  <t2>&e1;</t2>\n"
+                           "</t1>\n";
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  assert_true(_XML_Parse_SINGLE_BYTES(parser, text, (int)strlen(text),
+                                      /*isFinal*/ XML_TRUE)
+              == XML_STATUS_OK);
+  XML_ParserFree(parser);
+}
+END_TEST
+
 START_TEST(test_wfc_no_recursive_entity_refs) {
   const char *text = "<!DOCTYPE doc [\n"
                      "  <!ENTITY entity '&#38;entity;'>\n"
@@ -1201,6 +1217,79 @@ START_TEST(test_wfc_no_recursive_entity_refs) {
 
   expect_failure(text, XML_ERROR_RECURSIVE_ENTITY_REF,
                  "Parser did not report recursive entity reference.");
+}
+END_TEST
+
+START_TEST(test_no_indirectly_recursive_entity_refs) {
+  struct TestCase {
+    const char *doc;
+    bool usesParameterEntities;
+  };
+
+  const struct TestCase cases[] = {
+      // general entity + character data
+      {"<!DOCTYPE a [\n"
+       "  <!ENTITY e1 '&e2;'>\n"
+       "  <!ENTITY e2 '&e1;'>\n"
+       "]><a>&e2;</a>\n",
+       false},
+
+      // general entity + attribute value
+      {"<!DOCTYPE a [\n"
+       "  <!ENTITY e1 '&e2;'>\n"
+       "  <!ENTITY e2 '&e1;'>\n"
+       "]><a k1='&e2;' />\n",
+       false},
+
+      // parameter entity
+      {"<!DOCTYPE doc [\n"
+       "  <!ENTITY % p1 '&#37;p2;'>\n"
+       "  <!ENTITY % p2 '&#37;p1;'>\n"
+       "  <!ENTITY % define_g \"<!ENTITY g '&#37;p2;'>\">\n"
+       "  %define_g;\n"
+       "]>\n"
+       "<doc/>\n",
+       true},
+  };
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    const char *const doc = cases[i].doc;
+    const bool usesParameterEntities = cases[i].usesParameterEntities;
+
+    set_subtest("[%i] %s", (int)i, doc);
+
+#ifdef XML_DTD // both GE and DTD
+    const bool rejection_expected = true;
+#elif XML_GE == 1 // GE but not DTD
+    const bool rejection_expected = ! usesParameterEntities;
+#else             // neither DTD nor GE
+    const bool rejection_expected = false;
+#endif
+
+    XML_Parser parser = XML_ParserCreate(NULL);
+
+#ifdef XML_DTD
+    if (usesParameterEntities) {
+      assert_true(
+          XML_SetParamEntityParsing(parser, XML_PARAM_ENTITY_PARSING_ALWAYS)
+          == 1);
+    }
+#else
+    UNUSED_P(usesParameterEntities);
+#endif // XML_DTD
+
+    const enum XML_Status status
+        = _XML_Parse_SINGLE_BYTES(parser, doc, (int)strlen(doc),
+                                  /*isFinal*/ XML_TRUE);
+
+    if (rejection_expected) {
+      assert_true(status == XML_STATUS_ERROR);
+      assert_true(XML_GetErrorCode(parser) == XML_ERROR_RECURSIVE_ENTITY_REF);
+    } else {
+      assert_true(status == XML_STATUS_OK);
+    }
+
+    XML_ParserFree(parser);
+  }
 }
 END_TEST
 
@@ -1419,7 +1508,9 @@ START_TEST(test_suspend_parser_between_char_data_calls) {
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
@@ -1448,7 +1539,9 @@ START_TEST(test_repeated_stop_parser_between_char_data_calls) {
   XML_SetCharacterDataHandler(g_parser, parser_stop_character_handler);
   g_resumable = XML_TRUE;
   g_abortable = XML_FALSE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     fail("Failed to double-suspend parser");
 
@@ -1832,12 +1925,19 @@ END_TEST
 
 /* Test suspending the parser in cdata handler */
 START_TEST(test_suspend_parser_between_cdata_calls) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because of suspension
+    return;
+  }
+
   const char *text = long_cdata_text;
   enum XML_Status result;
 
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
   g_resumable = XML_TRUE;
-  result = _XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE);
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  result = XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE);
   if (result != XML_STATUS_SUSPENDED) {
     if (result == XML_STATUS_ERROR)
       xml_failure(g_parser);
@@ -2380,6 +2480,11 @@ END_TEST
  * entity.  Exercises some obscure code in XML_ParserReset().
  */
 START_TEST(test_reset_in_entity) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because of suspension
+    return;
+  }
+
   const char *text = "<!DOCTYPE doc [\n"
                      "<!ENTITY wombat 'wom'>\n"
                      "<!ENTITY entity 'hi &wom; there'>\n"
@@ -2389,7 +2494,9 @@ START_TEST(test_reset_in_entity) {
 
   g_resumable = XML_TRUE;
   XML_SetCharacterDataHandler(g_parser, clearing_aborting_character_handler);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       == XML_STATUS_ERROR)
     xml_failure(g_parser);
   XML_GetParsingStatus(g_parser, &status);
@@ -3636,7 +3743,9 @@ START_TEST(test_suspend_xdecl) {
   XML_SetXmlDeclHandler(g_parser, entity_suspending_xdecl_handler);
   XML_SetUserData(g_parser, g_parser);
   g_resumable = XML_TRUE;
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_GetErrorCode(g_parser) != XML_ERROR_NONE)
@@ -3832,13 +3941,20 @@ END_TEST
 
 /* Test syntax error is caught at parse resumption */
 START_TEST(test_resume_entity_with_syntax_error) {
+  if (g_chunkSize != 0) {
+    // this test does not use SINGLE_BYTES, because of suspension
+    return;
+  }
+
   const char *text = "<!DOCTYPE doc [\n"
                      "<!ENTITY foo '<suspend>Hi</wombat>'>\n"
                      "]>\n"
                      "<doc>&foo;</doc>\n";
 
   XML_SetStartElementHandler(g_parser, start_element_suspender);
-  if (_XML_Parse_SINGLE_BYTES(g_parser, text, (int)strlen(text), XML_TRUE)
+  // can't use SINGLE_BYTES here, because it'll return early on suspension, and
+  // we won't know exactly how much input we actually managed to give Expat.
+  if (XML_Parse(g_parser, text, (int)strlen(text), XML_TRUE)
       != XML_STATUS_SUSPENDED)
     xml_failure(g_parser);
   if (XML_ResumeParser(g_parser) != XML_STATUS_ERROR)
@@ -5970,7 +6086,9 @@ make_basic_test_case(Suite *s) {
   tcase_add_test(tc_basic, test_wfc_undeclared_entity_with_external_subset);
   tcase_add_test(tc_basic, test_not_standalone_handler_reject);
   tcase_add_test(tc_basic, test_not_standalone_handler_accept);
+  tcase_add_test(tc_basic, test_entity_start_tag_level_greater_than_one);
   tcase_add_test__if_xml_ge(tc_basic, test_wfc_no_recursive_entity_refs);
+  tcase_add_test(tc_basic, test_no_indirectly_recursive_entity_refs);
   tcase_add_test__ifdef_xml_dtd(tc_basic, test_ext_entity_invalid_parse);
   tcase_add_test__if_xml_ge(tc_basic, test_dtd_default_handling);
   tcase_add_test(tc_basic, test_dtd_attr_handling);
