@@ -363,13 +363,13 @@ still needed for all platforms.
 #define PACKAGE "expat"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "expat-bugs@libexpat.org"
+#define PACKAGE_BUGREPORT "https://github.com/libexpat/libexpat/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "expat"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "expat 2.6.2"
+#define PACKAGE_STRING "expat 2.7.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "expat"
@@ -378,10 +378,12 @@ still needed for all platforms.
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.6.2"
+#define PACKAGE_VERSION "2.7.1"
 
 /* Define to 1 if you have the ANSI C header files. */
+#ifndef STDC_HEADERS
 #define STDC_HEADERS
+#endif
 
 /* whether byteorder is bigendian */
 /* #undef WORDS_BIGENDIAN */
@@ -391,7 +393,7 @@ still needed for all platforms.
 /* #undef XML_ATTR_INFO */
 
 /* Define to specify how much context to retain around the current parse
-   point. */
+   point, 0 to disable. */
 #define XML_CONTEXT_BYTES 1024
 
 #if ! defined(_WIN32)
@@ -415,8 +417,5 @@ still needed for all platforms.
 
 /* Define to `long' if <sys/types.h> does not define. */
 /* #undef off_t */
-
-/* Define to `unsigned' if <sys/types.h> does not define. */
-/* #undef size_t */
 
 #endif // RTC defines
